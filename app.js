@@ -549,7 +549,7 @@ window.bootstrapDatabase = async function() {
       });
       // Try creating their Firebase Auth account
       try {
-        await registerUserWithFirebase(docEmail, "Staff123!");
+        await registerUserWithFirebase(docEmail, "Pass123");
       } catch (e) {
         if (e.code !== "auth/email-already-in-use") {
           console.warn("Could not register doctor auth:", docEmail, e);
@@ -559,12 +559,12 @@ window.bootstrapDatabase = async function() {
 
     // Register all default staff auth accounts
     const defaultStaffAuths = [
-      { email: "reception@atralos.com", pass: "Staff123!" },
-      { email: "nurse@atralos.com", pass: "Staff123!" },
-      { email: "lab@atralos.com", pass: "Staff123!" },
-      { email: "radiologist@atralos.com", pass: "Staff123!" },
-      { email: "pharmacist@atralos.com", pass: "Staff123!" },
-      { email: "finance@atralos.com", pass: "Staff123!" }
+      { email: "reception@atralos.com", pass: "Pass123" },
+      { email: "nurse@atralos.com", pass: "Pass123" },
+      { email: "lab@atralos.com", pass: "Pass123" },
+      { email: "radiologist@atralos.com", pass: "Pass123" },
+      { email: "pharmacist@atralos.com", pass: "Pass123" },
+      { email: "finance@atralos.com", pass: "Pass123" }
     ];
     for (const authUser of defaultStaffAuths) {
       try {
@@ -1012,13 +1012,21 @@ document.getElementById('btn-confirm-add-staff').addEventListener('click', async
   } else {
     newId = 'STF' + String(STAFF_ACCOUNTS.filter(s => !s.role.toLowerCase().includes('doctor')).length + 8).padStart(3, '0');
   }
-  const defaultPass = 'Staff123!';
+  const defaultPass = 'Pass123';
   
   showToast("Creating user authentication account...", "info");
   
   try {
-    // 1. Create auth user credentials in Firebase Auth
-    await registerUserWithFirebase(email, defaultPass);
+    // 1. Create auth user credentials in Firebase Auth (gracefully catch if email is already in use)
+    try {
+      await registerUserWithFirebase(email, defaultPass);
+    } catch (authError) {
+      if (authError.code === 'auth/email-already-in-use') {
+        console.warn("Auth user already exists, creating profile document anyway:", email);
+      } else {
+        throw authError;
+      }
+    }
     
     // 2. Save staff profile document to Firestore
     const newStaff = {
