@@ -1666,13 +1666,23 @@ function selectPatientForDoctor(pId) {
   renderDoctorPrescriptionTable();
   
   // Clean inputs
-  document.getElementById('soap-s').value = '';
-  document.getElementById('soap-o').value = '';
-  document.getElementById('soap-p').value = '';
-  document.getElementById('soap-a-search').value = '';
-  document.getElementById('doc-order-lab').value = '';
-  document.getElementById('doc-order-radio').value = '';
-  document.getElementById('doc-research-flag').checked = false;
+  if (document.getElementById('soap-s')) document.getElementById('soap-s').value = '';
+  if (document.getElementById('soap-o')) document.getElementById('soap-o').value = '';
+  if (document.getElementById('soap-p')) document.getElementById('soap-p').value = '';
+  if (document.getElementById('soap-a-search')) document.getElementById('soap-a-search').value = '';
+  
+  const labOrderEl = document.getElementById('doc-order-lab');
+  if (labOrderEl) labOrderEl.value = '';
+  const radioOrderEl = document.getElementById('doc-order-radio');
+  if (radioOrderEl) radioOrderEl.value = '';
+  
+  const researchFlagEl = document.getElementById('doc-research-flag');
+  if (researchFlagEl) researchFlagEl.checked = false;
+  
+  // Clear any selected investigation chips
+  document.querySelectorAll('.investigation-chip.selected').forEach(chip => {
+    chip.classList.remove('selected');
+  });
   
   // Load patient file repository
   renderDoctorRecordsTab(p.id);
