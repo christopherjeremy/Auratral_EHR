@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/Auratral_EHR/',
+  base: '/AtralOS/',
   build: {
     outDir: 'dist',
   }
