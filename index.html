@@ -251,23 +251,22 @@
         <svg viewBox="0 0 24 24"><path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path></svg>
         Back to Dashboard
       </button>
-      <h2 style="font-family:var(--font-heading);font-size:1.3rem;margin-bottom:16px;color:var(--primary)">System Settings & Configuration</h2>
-      <div class="settings-grid">
+      <h2 style="font-family:var(--font-heading);font-size:1.3rem;margin-bottom:16px;color:var(--primary)">System Settings & Config      <div class="settings-grid">
         <!-- Hospital Info -->
         <div class="settings-card">
           <h3><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> Hospital Information</h3>
           <div class="form-group"><label>Hospital Name</label><input type="text" value="Auratral General Hospital" id="settings-hospital-name"></div>
           <div class="form-group"><label>License Number</label><input type="text" value="HOSP-KA-2024-1129" readonly></div>
           <div class="form-group"><label>Address</label><input type="text" value="123, MG Road, Bengaluru 560001"></div>
-          <div class="form-group"><label>Emergency Helpline</label><input type="text" value="+91 80 1234 5678"></div>
+          <div class="form-group"><label>Emergency Helpline</label><input type="text" value="+91 80 1234 5678" id="settings-hospital-helpline"></div>
         </div>
         <!-- Security -->
         <div class="settings-card">
           <h3><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg> Security & Access</h3>
           <div class="settings-row"><div><div class="settings-row-label">Staff 2FA</div><div class="settings-row-desc">Require two-factor auth for staff login</div></div><div class="settings-row-control"><label class="toggle-switch"><input type="checkbox" checked id="policy-2fa"><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div><div class="settings-row-label">Session Timeout</div><div class="settings-row-desc">Auto-logout after inactivity</div></div><div class="settings-row-control"><select class="role-select" style="padding:4px 28px 4px 8px"><option>15 min</option><option selected>30 min</option><option>60 min</option><option>Never</option></select></div></div>
-          <div class="settings-row"><div><div class="settings-row-label">Password Policy</div><div class="settings-row-desc">Minimum password complexity</div></div><div class="settings-row-control"><select class="role-select" style="padding:4px 28px 4px 8px"><option>Basic</option><option selected>Strong</option><option>Enterprise</option></select></div></div>
-          <div class="settings-row"><div><div class="settings-row-label">IP Whitelisting</div><div class="settings-row-desc">Restrict access to specific IPs</div></div><div class="settings-row-control"><label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label></div></div>
+          <div class="settings-row"><div><div class="settings-row-label">Session Timeout</div><div class="settings-row-desc">Auto-logout after inactivity</div></div><div class="settings-row-control"><select class="role-select" id="settings-session-timeout" style="padding:4px 28px 4px 8px"><option>15 min</option><option selected>30 min</option><option>60 min</option><option>Never</option></select></div></div>
+          <div class="settings-row"><div><div class="settings-row-label">Password Policy</div><div class="settings-row-desc">Minimum password complexity</div></div><div class="settings-row-control"><select class="role-select" id="settings-password-policy" style="padding:4px 28px 4px 8px"><option>Basic</option><option selected>Strong</option><option>Enterprise</option></select></div></div>
+          <div class="settings-row"><div><div class="settings-row-label">IP Whitelisting</div><div class="settings-row-desc">Restrict access to specific IPs</div></div><div class="settings-row-control"><label class="toggle-switch"><input type="checkbox" id="settings-ip-whitelisting"><span class="toggle-slider"></span></label></div></div>
         </div>
         <!-- Modules -->
         <div class="settings-card">
@@ -275,8 +274,8 @@
           <div class="settings-row"><div><div class="settings-row-label">Pharmacy Module</div></div><div class="settings-row-control"><label class="toggle-switch"><input type="checkbox" checked id="module-pharmacy"><span class="toggle-slider"></span></label></div></div>
           <div class="settings-row"><div><div class="settings-row-label">Radiology Module</div></div><div class="settings-row-control"><label class="toggle-switch"><input type="checkbox" checked id="module-radiology"><span class="toggle-slider"></span></label></div></div>
           <div class="settings-row"><div><div class="settings-row-label">Laboratory Module</div></div><div class="settings-row-control"><label class="toggle-switch"><input type="checkbox" checked id="module-lab"><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div><div class="settings-row-label">Patient Portal</div></div><div class="settings-row-control"><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div><div class="settings-row-label">AI Triage Engine</div></div><div class="settings-row-control"><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div></div>
+          <div class="settings-row"><div><div class="settings-row-label">Patient Portal</div></div><div class="settings-row-control"><label class="toggle-switch"><input type="checkbox" checked id="module-patient-portal"><span class="toggle-slider"></span></label></div></div>
+          <div class="settings-row"><div><div class="settings-row-label">AI Triage Engine</div></div><div class="settings-row-control"><label class="toggle-switch"><input type="checkbox" checked id="module-ai-triage"><span class="toggle-slider"></span></label></div></div>
         </div>
         <!-- Data Retention -->
         <div class="settings-card">
@@ -292,7 +291,7 @@
           <h3><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Backup & Export</h3>
           <div class="settings-row"><div><div class="settings-row-label">Auto Backup</div><div class="settings-row-desc">Daily cloud backup at 2:00 AM</div></div><div class="settings-row-control"><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div></div>
           <div class="settings-row"><div><div class="settings-row-label">Last Backup</div></div><div class="settings-row-control"><span style="font-size:.72rem;color:var(--success);font-weight:600">Today, 02:00 AM</span></div></div>
-          <button class="glass-btn glass-btn-primary" style="width:100%;margin-top:10px" onclick="showToast('Export started. File will be ready shortly.','info')">Export All Data (CSV)</button>
+          <button class="glass-btn glass-btn-primary" style="width:100%;margin-top:10px" onclick="exportAllCollectionsToCSV()">Export All Data (CSV)</button>
         </div>
         <!-- Notifications -->
         <div class="settings-card">
@@ -303,6 +302,10 @@
           <div class="settings-row"><div><div class="settings-row-label">Patient Portal Messages</div></div><div class="settings-row-control"><label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label></div></div>
         </div>
       </div>
+      <div style="margin-top:20px; display:flex; justify-content:flex-end;">
+        <button class="glass-btn glass-btn-primary" style="padding:10px 24px" onclick="saveSystemSettings()">Save System Settings</button>
+      </div>
+    </div>
     </div>
 
     <!-- ====== 2. RECEPTION PANEL ====== -->
@@ -959,6 +962,27 @@
       <div class="modal-header"><h3 class="modal-title">Staff Profile</h3><button class="modal-close-btn" onclick="document.getElementById('modal-staff-detail').classList.remove('open')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
       <div class="modal-body" id="staff-detail-body"></div>
       <div class="modal-footer"><button class="glass-btn glass-btn-secondary" onclick="document.getElementById('modal-staff-detail').classList.remove('open')">Close</button></div>
+    </div>
+  </div>
+
+  <!-- Device Detail Modal -->
+  <div class="modal-overlay" id="modal-device-detail">
+    <div class="modal-box" style="max-width:500px">
+      <div class="modal-header"><h3 class="modal-title">Device Service Detail</h3><button class="modal-close-btn" onclick="document.getElementById('modal-device-detail').classList.remove('open')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+      <div class="modal-body" id="device-detail-body"></div>
+      <div class="modal-footer"><button class="glass-btn glass-btn-secondary" onclick="document.getElementById('modal-device-detail').classList.remove('open')">Close</button></div>
+    </div>
+  </div>
+
+  <!-- Pharmacy Label Modal -->
+  <div class="modal-overlay" id="modal-pharmacy-label">
+    <div class="modal-box" style="max-width:450px;">
+      <div class="modal-header"><h3 class="modal-title">Print Dispensation Label</h3><button class="modal-close-btn" onclick="document.getElementById('modal-pharmacy-label').classList.remove('open')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+      <div class="modal-body" id="pharmacy-label-body" style="padding:15px; border:1px solid #ccc; background:#fff; color:#000; border-radius:4px;"></div>
+      <div class="modal-footer">
+        <button class="glass-btn glass-btn-secondary" onclick="document.getElementById('modal-pharmacy-label').classList.remove('open')">Close</button>
+        <button class="glass-btn glass-btn-primary" onclick="window.print(); showToast('Label printed successfully!');">Print</button>
+      </div>
     </div>
   </div>
 

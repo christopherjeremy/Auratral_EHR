@@ -46,6 +46,7 @@ const api = {
     getMessages: "messages",
     getPharmacyInventory: "pharmacyInventory",
     getLabReagents: "labReagents",
+    getSystemSettings: "systemSettings",
     
     // Mutations
     upsertPatient: "patients",
@@ -73,7 +74,8 @@ const api = {
     upsertDischargeSummary: "dischargeSummaries",
     upsertMessage: "messages",
     upsertPharmacyInventory: "pharmacyInventory",
-    upsertLabReagent: "labReagents"
+    upsertLabReagent: "labReagents",
+    upsertSystemSettings: "systemSettings"
   }
 };
 
@@ -199,7 +201,13 @@ async function encryptPatient(p) {
     mobile: await encryptText(p.mobile),
     emergency: await encryptText(p.emergency),
     insurance: await encryptText(p.insurance),
-    abhaId: p.abhaId ? await encryptText(p.abhaId) : ""
+    abhaId: p.abhaId ? await encryptText(p.abhaId) : "",
+    address: p.address ? await encryptText(p.address) : "",
+    occupation: p.occupation ? await encryptText(p.occupation) : "",
+    maritalStatus: p.maritalStatus ? await encryptText(p.maritalStatus) : "",
+    allergies: p.allergies ? await encryptText(p.allergies) : "",
+    chronicConditions: p.chronicConditions ? await encryptText(p.chronicConditions) : "",
+    referredBy: p.referredBy ? await encryptText(p.referredBy) : ""
   };
 }
 
@@ -218,7 +226,14 @@ async function mutatePatient(patient) {
     consentCommercial: patient.consentCommercial,
     consentFuture: patient.consentFuture,
     regDate: patient.regDate,
-    status: patient.status
+    status: patient.status,
+    photo: patient.photo || "",
+    address: patient.address || "",
+    occupation: patient.occupation || "",
+    maritalStatus: patient.maritalStatus || "",
+    allergies: patient.allergies || "",
+    chronicConditions: patient.chronicConditions || "",
+    referredBy: patient.referredBy || ""
   };
   const encrypted = await encryptPatient(schemaPatient);
   return await convex.mutation(api.db.upsertPatient, encrypted);
@@ -311,7 +326,8 @@ const STATE = {
   dischargeSummaries: [],
   messages: [],
   pharmacyInventory: [],
-  labReagents: []
+  labReagents: [],
+  systemSettings: null
 };
 
 // Seed Databases
@@ -649,48 +665,342 @@ window.bootstrapDatabase = async function() {
         leaveBalance: 15,
         joiningDate: new Date().toISOString().split('T')[0]
       });
-    }
+    }    // Seed systemSettings
+    const defaultSettings = {
+      id: 'system-settings',
+      hospitalName: 'Auratral General Hospital',
+      helpline: '+91 80 1234 5678',
+      policy2fa: true,
+      sessionTimeout: '30 min',
+      passwordPolicy: 'Strong',
+      ipWhitelisting: false,
+      modulePharmacy: true,
+      moduleRadiology: true,
+      moduleLab: true,
+      modulePatientPortal: true,
+      moduleAiTriage: true,
+      policyRetention: '7'
+    };
+    await setDoc(doc(db, "systemSettings", defaultSettings.id), defaultSettings);
 
-    // Seed patients (PII is encrypted client-side)
-    for (const p of SEED_PATIENTS) {
+    // 1. Patients (10 records)
+    const seedPatients = [
+      { id: 'AURA-2026-0001', name: 'Rajesh Kumar', dob: '1984-06-15', gender: 'Male', mobile: '9876543210', bloodGroup: 'O+', emergency: 'Sunita Kumar - 9876543211', insurance: 'Star Health - POL100329', abhaId: 'rajesh.kumar@abdm', consentAcademic: true, consentCommercial: true, consentFuture: true, regDate: '2026-05-27T10:00:00Z', status: 'OPD Queue', photo: '', address: 'MG Road, Bengaluru', occupation: 'Engineer', maritalStatus: 'Married', allergies: 'Penicillin', chronicConditions: 'Diabetes', referredBy: 'Self' },
+      { id: 'AURA-2026-0002', name: 'Priyanka Sen', dob: '1992-11-20', gender: 'Female', mobile: '9123456789', bloodGroup: 'B+', emergency: 'Deepak Sen - 9123456780', insurance: 'HDFC Ergo - POL903214', abhaId: 'priyanka@abdm', consentAcademic: true, consentCommercial: false, consentFuture: true, regDate: '2026-05-27T11:00:00Z', status: 'In Consultation', photo: '', address: 'Indiranagar, Bengaluru', occupation: 'Teacher', maritalStatus: 'Married', allergies: 'Dust', chronicConditions: 'Asthma', referredBy: 'Dr. Sen' },
+      { id: 'AURA-2026-0003', name: 'Harish Mehta', dob: '1959-03-08', gender: 'Male', mobile: '9001122334', bloodGroup: 'A-', emergency: 'Alka Mehta - 9001122335', insurance: 'N/A', abhaId: '', consentAcademic: false, consentCommercial: false, consentFuture: false, regDate: '2026-05-27T12:00:00Z', status: 'Booked', photo: '', address: 'Koramangala, Bengaluru', occupation: 'Retired', maritalStatus: 'Married', allergies: 'None', chronicConditions: 'Hypertension', referredBy: 'Self' },
+      { id: 'AURA-2026-0004', name: 'Kavita Reddy', dob: '1975-08-22', gender: 'Female', mobile: '9988776655', bloodGroup: 'AB+', emergency: 'Sanjay Reddy - 9988776654', insurance: 'Star Health - POL100984', abhaId: 'kavita@abdm', consentAcademic: true, consentCommercial: true, consentFuture: true, regDate: '2026-05-27T13:00:00Z', status: 'Admitted', photo: '', address: 'Whitefield, Bengaluru', occupation: 'Manager', maritalStatus: 'Married', allergies: 'Peanuts', chronicConditions: 'None', referredBy: 'Self' },
+      { id: 'AURA-2026-0005', name: 'Amit Sharma', dob: '1988-02-14', gender: 'Male', mobile: '9880011223', bloodGroup: 'O-', emergency: 'Rita Sharma - 9880011224', insurance: 'ICICI Lombard - POL44392', abhaId: 'amit@abdm', consentAcademic: false, consentCommercial: false, consentFuture: true, regDate: '2026-05-27T14:00:00Z', status: 'Discharged', photo: '', address: 'Jayanagar, Bengaluru', occupation: 'Developer', maritalStatus: 'Single', allergies: 'None', chronicConditions: 'None', referredBy: 'Dr. Verma' },
+      { id: 'AURA-2026-0006', name: 'Saira Banu', dob: '1995-12-05', gender: 'Female', mobile: '9770022334', bloodGroup: 'A+', emergency: 'Yusuf Khan - 9770022335', insurance: 'Care Health - POL88921', abhaId: 'saira@abdm', consentAcademic: true, consentCommercial: false, consentFuture: true, regDate: '2026-05-27T15:00:00Z', status: 'Booked', photo: '', address: 'Frazer Town, Bengaluru', occupation: 'Writer', maritalStatus: 'Single', allergies: 'None', chronicConditions: 'Migraine', referredBy: 'Self' },
+      { id: 'AURA-2026-0007', name: 'Vikram Singh', dob: '1970-07-30', gender: 'Male', mobile: '9660033445', bloodGroup: 'B-', emergency: 'Karan Singh - 9660033446', insurance: 'N/A', abhaId: '', consentAcademic: false, consentCommercial: false, consentFuture: false, regDate: '2026-05-27T16:00:00Z', status: 'Booked', photo: '', address: 'Hebbal, Bengaluru', occupation: 'Business', maritalStatus: 'Married', allergies: 'Shellfish', chronicConditions: 'Gout', referredBy: 'Self' },
+      { id: 'AURA-2026-0008', name: 'Anjali Desai', dob: '1981-04-12', gender: 'Female', mobile: '9550044556', bloodGroup: 'AB-', emergency: 'Rahul Desai - 9550044557', insurance: 'Max Bupa - POL55490', abhaId: 'anjali@abdm', consentAcademic: true, consentCommercial: true, consentFuture: true, regDate: '2026-05-27T17:00:00Z', status: 'Booked', photo: '', address: 'Malleshwaram, Bengaluru', occupation: 'Artist', maritalStatus: 'Married', allergies: 'None', chronicConditions: 'None', referredBy: 'Self' },
+      { id: 'AURA-2026-0009', name: 'David Dsouza', dob: '1965-09-18', gender: 'Male', mobile: '9440055667', bloodGroup: 'O+', emergency: 'Mary Dsouza - 9440055668', insurance: 'Star Health - POL200344', abhaId: 'david@abdm', consentAcademic: true, consentCommercial: false, consentFuture: true, regDate: '2026-05-27T18:00:00Z', status: 'Booked', photo: '', address: 'Richmond Town, Bengaluru', occupation: 'Architect', maritalStatus: 'Married', allergies: 'Sulfa Drugs', chronicConditions: 'Dyslipidemia', referredBy: 'Self' },
+      { id: 'AURA-2026-0010', name: 'Meena Kumari', dob: '1952-10-25', gender: 'Female', mobile: '9330066778', bloodGroup: 'A+', emergency: 'Kishore Kumar - 9330066779', insurance: 'N/A', abhaId: '', consentAcademic: false, consentCommercial: false, consentFuture: false, regDate: '2026-05-27T19:00:00Z', status: 'Booked', photo: '', address: 'Rajajinagar, Bengaluru', occupation: 'Homemaker', maritalStatus: 'Widowed', allergies: 'None', chronicConditions: 'Osteoporosis', referredBy: 'Self' }
+    ];
+    for (const p of seedPatients) {
       const enc = await encryptPatient(p);
       await setDoc(doc(db, "patients", p.id), enc);
     }
 
-    // Seed appointments (with department mapped)
-    for (const a of SEED_APPOINTMENTS) {
-      const docObj = DOCTORS.find(d => d.id === a.doctorId);
-      const dept = docObj ? docObj.dept : "General";
-      await setDoc(doc(db, "appointments", a.id), {
-        ...a,
-        department: dept,
-        investigationStatus: a.investigationStatus || "None"
-      });
+    // 2. Appointments (10 records)
+    const seedAppointments = Array.from({ length: 10 }, (_, i) => ({
+      id: `APT-${String(i+1).padStart(3, '0')}`,
+      patientId: `AURA-2026-${String((i % 10) + 1).padStart(4, '0')}`,
+      doctorId: `DOC00${(i % 4) + 1}`,
+      department: ['Cardiology', 'General Medicine', 'Orthopedics', 'Pediatrics'][i % 4],
+      date: new Date(Date.now() + (i - 2) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      time: `${9 + (i % 8)}:00`,
+      type: ['New Consultation', 'Follow-up', 'Emergency', 'Routine Checkup'][i % 4],
+      status: ['Booked', 'Completed', 'Cancelled', 'Admitted'][i % 4],
+      token: (i % 3) + 1,
+      investigationStatus: ['None', 'Ordered', 'Reported'][i % 3],
+      timestamp: new Date().toISOString()
+    }));
+    for (const a of seedAppointments) {
+      await setDoc(doc(db, "appointments", a.id), a);
     }
 
-    // Seed clinical records
-    for (const c of SEED_CLINICAL) {
-      await setDoc(doc(db, "clinicalRecords", c.id), c);
-    }
-
-    // Seed investigations
-    for (const i of SEED_INVESTIGATIONS) {
-      await setDoc(doc(db, "investigations", i.id), i);
-    }
-
-    // Seed vitals
-    for (const v of SEED_VITALS) {
-      await setDoc(doc(db, "vitals", v.id), v);
-    }
-
-    // Seed devices
-    for (const d of SEED_DEVICES) {
+    // 3. Devices (10 records)
+    const seedDevices = Array.from({ length: 10 }, (_, i) => ({
+      id: `DEV-${String(i+1).padStart(3, '0')}`,
+      name: ['Philips Multi-Monitor', 'Maquet Ventilator v2', 'GE Mac ECG Machine', 'Siemens Mobile X-Ray', 'Philips Ingenia MRI', 'Toshiba Aquilion CT Scanner', 'Sonosite Ultrasound', 'Zoll Defibrillator', 'Alaris Infusion Pump', 'Mindray Hematology Analyzer'][i],
+      type: ['Monitor', 'Ventilator', 'ECG', 'X-Ray', 'MRI', 'CT Scanner', 'Ultrasound', 'Defibrillator', 'Infusion Pump', 'Analyzer'][i],
+      department: ['Emergency', 'ICU', 'Cardiology', 'Radiology', 'Radiology', 'Radiology', 'OB-GYN', 'Emergency', 'ICU', 'Pathology'][i],
+      location: `Room ${i + 1}`,
+      serialNumber: `SN-${100000 + i * 5432}`,
+      status: ['Active', 'Under Maintenance', 'Decommissioned'][i % 3],
+      lastServiceDate: '2026-04-12',
+      maintenanceDue: '2026-10-12',
+      notes: `Biomedical Team checked calibration on 2026-04-12. Running firmware v${i}.1.`
+    }));
+    for (const d of seedDevices) {
       await setDoc(doc(db, "devices", d.id), d);
     }
 
-    // Seed complaints
-    for (const c of SEED_COMPLAINTS) {
+    // 4. Complaints (10 records)
+    const seedComplaints = Array.from({ length: 10 }, (_, i) => ({
+      id: `TKT-${String(i+1).padStart(3, '0')}`,
+      title: ['MRI cooling system leak', 'OPD AC not working', 'HIS system slow response', 'Glove stock depleted Ward B', 'Lab drain blockage', 'Defibrillator battery low', 'Nurse roster mismatch', 'Pharmacy printer jam', 'Wheelchair lock broken', 'Radiology workstation display flicker'][i],
+      category: ['Device Malfunction', 'Infrastructure', 'IT/Software', 'Staffing/Supply', 'Hygiene', 'Device Malfunction', 'Staffing/Supply', 'IT/Software', 'Infrastructure', 'Device Malfunction'][i],
+      department: ['Radiology', 'Reception', 'Billing', 'Nursing', 'Pathology', 'Emergency', 'Nursing', 'Pharmacy', 'Reception', 'Radiology'][i],
+      priority: ['Critical', 'Medium', 'High', 'Low'][i % 4],
+      status: ['Open', 'In Progress', 'Resolved'][i % 3],
+      reportedBy: ['Dr. Sunita Rao', 'Kiran G.', 'Divya Iyer', 'Sister Prema', 'Dr. Rajesh Patel', 'Suresh Gowda', 'Sister Mini', 'Alok M.', 'Kiran G.', 'Dr. Tarun'][i % 10],
+      assignedTo: ['Biomedical Team', 'Maintenance', 'IT Support', 'Procurement', 'Housekeeping', 'Biomedical Team', 'HR Dept', 'IT Support', 'Maintenance', 'Biomedical Team'][i],
+      description: `Reported issue regarding ${i}. Require resolution at the earliest.`,
+      resolution: i % 3 === 2 ? 'Cleared and checked on site by duty engineer.' : '',
+      createdAt: new Date(Date.now() - i * 3600 * 1000).toISOString(),
+      resolvedAt: i % 3 === 2 ? new Date().toISOString() : ''
+    }));
+    for (const c of seedComplaints) {
       await setDoc(doc(db, "complaints", c.id), c);
+    }
+
+    // 5. Notifications (10 records)
+    const seedNotifications = Array.from({ length: 10 }, (_, i) => ({
+      id: `NOTIF-${String(i+1).padStart(3, '0')}`,
+      title: ['Critical Lab Value Alert', 'New Teleconsultation Assigned', 'Narcotics Register Update Required', 'Bed Grid Transfer Alert', 'Equipment Maintenance Due', 'Blood Stock Level Low (O-)', 'Shift Handover Complete', 'New Patient Check-in', 'IPD Interim Bill Due', 'Triage T1 Alert - ER'][i % 10],
+      message: `System notification alert detail for item #${i+1}. Action requested.`,
+      type: ['Critical', 'Warning', 'Info', 'Success'][i % 4],
+      read: i % 3 === 0,
+      timestamp: new Date(Date.now() - i * 2 * 3600 * 1000).toISOString()
+    }));
+    for (const n of seedNotifications) {
+      await setDoc(doc(db, "notifications", n.id), n);
+    }
+
+    // 6. Vitals (10 records)
+    const seedVitals = Array.from({ length: 10 }, (_, i) => ({
+      id: `VIT-${String(i+1).padStart(3, '0')}`,
+      patientId: `AURA-2026-${String((i % 10) + 1).padStart(4, '0')}`,
+      bp: `${110 + (i % 5) * 10}/${70 + (i % 4) * 8}`,
+      temp: (98.0 + (i % 6) * 0.4).toFixed(1),
+      spo2: 95 + (i % 6),
+      pulse: 70 + (i % 6) * 5,
+      sugar: 90 + (i % 10) * 12,
+      notes: `Vital signs logged at check-in station ${i % 3 + 1}`,
+      timestamp: new Date(Date.now() - i * 4 * 3600 * 1000).toISOString()
+    }));
+    for (const v of seedVitals) {
+      await setDoc(doc(db, "vitals", v.id), v);
+    }
+
+    // 7. EmergencyCases (10 records)
+    const seedEmergency = Array.from({ length: 10 }, (_, i) => ({
+      id: `ER-${String(100 + i + 1)}`,
+      patientId: `AURA-2026-${String((i % 10) + 1).padStart(4, '0')}`,
+      triageLevel: ['Red', 'Orange', 'Yellow', 'Green', 'Blue'][i % 5],
+      chiefComplaint: ['Severe chest pain, breathlessness', 'Suspected stroke, slurred speech', 'Laceration on right leg, bleeding', 'High grade fever with seizures', 'Acute abdominal pain, vomiting', 'RTA head injury, semi-conscious', 'Asthma exacerbation', 'Suspected poisoning', 'Fall with hip fracture', 'Anaphylactic shock'][i],
+      broughtBy: ['Ambulance (108)', 'Spouse', 'Friend', 'Parents', 'Brother', 'Police (MLC)', 'Self', 'Neighbor', 'Son', 'Ambulance (108)'][i],
+      timeOfArrival: new Date(Date.now() - i * 2 * 3600 * 1000).toISOString(),
+      status: ['Active', 'Completed', 'Transferred'][i % 3],
+      disposition: ['Resus', 'ER Bed', 'ICU Admitted', 'Discharged'][i % 4],
+      mlcFlag: i % 4 === 0,
+      mlcDetails: i % 4 === 0 ? { firNumber: `FIR-2026-${200 + i}`, policeStation: 'Halasuru Police', injuryType: 'Physical Trauma', timestamp: new Date().toISOString() } : null
+    }));
+    for (const ec of seedEmergency) {
+      await setDoc(doc(db, "emergencyCases", ec.id), ec);
+    }
+
+    // 8. IcuAdmissions (10 records)
+    const seedIcu = Array.from({ length: 10 }, (_, i) => ({
+      id: `ICU-ADM-${String(200 + i + 1)}`,
+      patientId: `AURA-2026-${String((i % 10) + 1).padStart(4, '0')}`,
+      bedNumber: `ICU-Bed ${i + 1}`,
+      diagnosis: ['Acute Coronary Syndrome', 'Ischemic Stroke', 'Polytrauma (Post-Op)', 'Septic Shock', 'Acute Respiratory Distress', 'Post Cardiac Arrest Care', 'Hepatic Encephalopathy', 'Diabetic Ketoacidosis', 'Severe Pancreatitis', 'Meningitis'][i],
+      ventilatorStatus: i % 3 === 0,
+      isolationFlag: i % 4 === 0,
+      acuityLevel: ['Critical', 'Stable', 'Improving'][i % 3],
+      nurseId: 'STF003',
+      apacheScore: 10 + i * 2.5,
+      sofaScore: 2 + i,
+      ewsScore: (i % 6) + 2,
+      timestamp: new Date(Date.now() - i * 24 * 3600 * 1000).toISOString()
+    }));
+    for (const ic of seedIcu) {
+      await setDoc(doc(db, "icuAdmissions", ic.id), ic);
+    }
+
+    // 9. IcuCharting (10 records)
+    const seedIcuCharting = Array.from({ length: 10 }, (_, i) => ({
+      id: `ICU-V-${String(300 + i + 1)}`,
+      patientId: `AURA-2026-${String((i % 10) + 1).padStart(4, '0')}`,
+      type: 'Vitals',
+      hr: 70 + (i % 5) * 8,
+      spo2: 92 + (i % 8),
+      rr: 14 + (i % 4) * 2,
+      etco2: 32 + (i % 5) * 2,
+      recordedBy: ['Nurse Prema', 'Nurse Ritu', 'Nurse Mary'][i % 3],
+      timestamp: new Date(Date.now() - i * 3600 * 1000).toISOString()
+    }));
+    for (const ch of seedIcuCharting) {
+      await setDoc(doc(db, "icuCharting", ch.id), ch);
+    }
+
+    // 10. Surgeries (10 records)
+    const seedSurgeries = Array.from({ length: 10 }, (_, i) => ({
+      id: `SURG-${String(300 + i + 1)}`,
+      patientId: `AURA-2026-${String((i % 10) + 1).padStart(4, '0')}`,
+      procedureName: ['Coronary Artery Bypass Graft (CABG)', 'Open Reduction Internal Fixation (ORIF)', 'Laparoscopic Appendectomy', 'Cholecystectomy', 'Hernioplasty', 'Cesarean Section', 'Total Knee Arthroplasty', 'Tympanoplasty', 'Craniotomy', 'Mastectomy'][i],
+      surgeonId: `DOC00${(i % 4) + 1}`,
+      anesthetistId: `DOC00${((i+1) % 4) + 1}`,
+      roomNumber: `OT-${(i % 3) + 1}`,
+      scheduledDate: new Date(Date.now() + (i - 1) * 24 * 3600 * 1000).toISOString().split('T')[0],
+      scheduledTime: `${8 + (i % 5) * 2}:30`,
+      status: ['Scheduled', 'In-Progress', 'Completed'][i % 3],
+      preOpChecklist: { identityConfirmed: true, siteMarked: i % 2 === 0, anesthesiaSafetyChecked: true, pulseOximeterActive: true, teamIntroduced: true, procedureConfirmed: true, antibioticsGiven: true }
+    }));
+    for (const sg of seedSurgeries) {
+      await setDoc(doc(db, "surgeries", sg.id), sg);
+    }
+
+    // 11. OtSchedule (10 records)
+    const seedOtSchedule = Array.from({ length: 10 }, (_, i) => ({
+      id: `OTS-${String(i+1).padStart(3, '0')}`,
+      roomNumber: `OT-${(i % 3) + 1}`,
+      procedureName: ['CABG', 'ORIF', 'Appendectomy', 'Cholecystectomy', 'Hernia Repair', 'C-Section', 'Knee Joint Replacement', 'Tympanoplasty', 'Craniotomy', 'Mastectomy'][i],
+      surgeonId: `DOC00${(i % 4) + 1}`,
+      date: new Date(Date.now() + (i - 1) * 24 * 3600 * 1000).toISOString().split('T')[0],
+      time: `${8 + (i % 5) * 2}:30`,
+      status: ['Scheduled', 'In-Progress', 'Completed'][i % 3]
+    }));
+    for (const ot of seedOtSchedule) {
+      await setDoc(doc(db, "otSchedule", ot.id), ot);
+    }
+
+    // 12. BloodInventory (10 records)
+    const seedBlood = [
+      { id: 'BLD-A-POS', bloodGroup: 'A+', component: 'Whole Blood', units: 14, expiry: '2026-07-20' },
+      { id: 'BLD-A-NEG', bloodGroup: 'A-', component: 'PRBC', units: 4, expiry: '2026-07-15' },
+      { id: 'BLD-B-POS', bloodGroup: 'B+', component: 'FFP', units: 18, expiry: '2026-08-12' },
+      { id: 'BLD-B-NEG', bloodGroup: 'B-', component: 'Platelets', units: 3, expiry: '2026-07-02' },
+      { id: 'BLD-AB-POS', bloodGroup: 'AB+', component: 'Whole Blood', units: 8, expiry: '2026-07-28' },
+      { id: 'BLD-AB-NEG', bloodGroup: 'AB-', component: 'PRBC', units: 2, expiry: '2026-07-09' },
+      { id: 'BLD-O-POS', bloodGroup: 'O+', component: 'Platelets', units: 25, expiry: '2026-07-05' },
+      { id: 'BLD-O-NEG', bloodGroup: 'O-', component: 'PRBC', units: 6, expiry: '2026-07-18' },
+      { id: 'BLD-A-POS-FFP', bloodGroup: 'A+', component: 'FFP', units: 9, expiry: '2026-08-01' },
+      { id: 'BLD-B-POS-PRBC', bloodGroup: 'B+', component: 'PRBC', units: 12, expiry: '2026-07-31' }
+    ];
+    for (const bl of seedBlood) {
+      await setDoc(doc(db, "bloodInventory", bl.id), bl);
+    }
+
+    // 13. Donors (10 records)
+    const seedDonors = Array.from({ length: 10 }, (_, i) => ({
+      id: `DON-${String(400 + i + 1)}`,
+      name: ['Kumar Mangalam', 'Sunita Deshmukh', 'Amanpreet Singh', 'Nisha Hegde', 'Robert Dcosta', 'Zaheer Khan', 'Kavita Roy', 'Joseph John', 'Sneha Patil', 'Vikas Gowda'][i],
+      age: 20 + i * 3,
+      bloodGroup: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-', 'A+', 'B+'][i],
+      mobile: `9876500${100 + i}`,
+      donationDate: new Date(Date.now() - i * 15 * 24 * 3600 * 1000).toISOString(),
+      eligibility: 'Eligible'
+    }));
+    for (const d of seedDonors) {
+      await setDoc(doc(db, "donors", d.id), d);
+    }
+
+    // 14. BloodRequests (10 records)
+    const seedBloodRequests = Array.from({ length: 10 }, (_, i) => ({
+      id: `REQ-${String(900 + i + 1)}`,
+      patientId: `AURA-2026-${String((i % 10) + 1).padStart(4, '0')}`,
+      bloodGroup: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-', 'A+', 'B+'][i],
+      units: (i % 3) + 1,
+      status: ['Pending', 'Approved / Matched', 'Issued'][i % 3]
+    }));
+    for (const br of seedBloodRequests) {
+      await setDoc(doc(db, "bloodRequests", br.id), br);
+    }
+
+    // 15. DietOrders (10 records)
+    const seedDietOrders = Array.from({ length: 10 }, (_, i) => ({
+      id: `DIET-${String(500 + i + 1)}`,
+      patientId: `AURA-2026-${String((i % 10) + 1).padStart(4, '0')}`,
+      dietType: ['Cardiac / Low Sodium', 'Regular Standard', 'Diabetic Carbohydrate Restricted', 'Renal Protein Restricted', 'Clear Liquid', 'NBM (Fasting)'][i % 6],
+      preference: ['Veg', 'Non-Veg', 'Egg'][i % 3],
+      allergens: i % 4 === 0 ? ['Nuts'] : i % 4 === 1 ? ['Gluten'] : [],
+      breakfast: ['Prepared', 'Consumed', 'Pending'][i % 3],
+      lunch: ['Pending', 'Prepared', 'Consumed'][i % 3],
+      dinner: ['Pending', 'Prepared', 'Consumed'][i % 3]
+    }));
+    for (const dt of seedDietOrders) {
+      await setDoc(doc(db, "dietOrders", dt.id), dt);
+    }
+
+    // 16. AmbulanceFleet (10 records)
+    const seedAmbulanceFleet = Array.from({ length: 10 }, (_, i) => ({
+      id: `AMB-${String(i+1).padStart(2, '0')}`,
+      vehicleNum: `KA-03-GA-${1102 + i}`,
+      type: ['Advanced Life Support (ALS)', 'Basic Life Support (BLS)', 'Patient Transport Van'][i % 3],
+      status: ['Available', 'Dispatched', 'On-Scene', 'Out of Service'][i % 4],
+      insuranceExpiry: new Date(Date.now() + 180 * 24 * 3600 * 1000).toISOString().split('T')[0],
+      lastServiceDate: new Date(Date.now() - 45 * 24 * 3600 * 1000).toISOString().split('T')[0]
+    }));
+    for (const am of seedAmbulanceFleet) {
+      await setDoc(doc(db, "ambulanceFleet", am.id), am);
+    }
+
+    // 17. AmbulanceTrips (10 records)
+    const seedAmbulanceTrips = Array.from({ length: 10 }, (_, i) => ({
+      id: `TRP-${String(800 + i + 1)}`,
+      vehicleId: `AMB-${String((i % 10) + 1).padStart(2, '0')}`,
+      callerName: ['Asha Hegde', 'Ramesh Gowda', 'Kiran Patel', 'Sneha Das', 'John Mathew', 'Meena Rao', 'David Wilson', 'Rita Sen', 'Alok Nath', 'Vijay Shekar'][i],
+      pickupLocation: ['MG Road Metro Station', 'Indiranagar 100ft Rd', 'Whitefield ITPL', 'Koramangala 5th Block', 'Jayanagar 4th Block', 'Malleshwaram 8th Cross', 'Hebbal Flyover', 'Electronic City Phase 1', 'Banashankari 3rd Stage', 'Yelahanka New Town'][i],
+      chiefComplaint: ['Suspected trauma after fall', 'Severe breathing difficulty', 'Cardiac chest discomfort', 'High speed collision injury', 'Acute respiratory failure', 'Unconscious patient', 'Laceration with bleeding', 'Pregnancy labor pains', 'Severe burn injury', 'Anaphylactic allergic attack'][i],
+      urgency: ['High', 'Critical', 'Routine'][i % 3],
+      status: ['Dispatched', 'On-Scene', 'Arrived Hospital'][i % 3],
+      timestamps: { callReceived: new Date().toISOString() }
+    }));
+    for (const tr of seedAmbulanceTrips) {
+      await setDoc(doc(db, "ambulanceTrips", tr.id), tr);
+    }
+
+    // 18. ClinicalRecords (10 records)
+    const seedClinicalRecords = Array.from({ length: 10 }, (_, i) => ({
+      id: `CLN-${String(600 + i + 1)}`,
+      patientId: `AURA-2026-${String((i % 10) + 1).padStart(4, '0')}`,
+      doctorId: `DOC00${(i % 4) + 1}`,
+      doctorName: ['Dr. Vikranth Reddy', 'Dr. Ananya Sharma', 'Dr. Sanjay Sen', 'Dr. Meera Nair'][i % 4],
+      date: new Date(Date.now() - i * 2 * 24 * 3600 * 1000).toISOString(),
+      s: ['Patient complains of mild chest tightness.', 'Follow-up consultation for blood sugar check.', 'Knee joint pain after minor twist.', 'Cough and throat irritation since 3 days.', 'Routine health checkup requested.', 'Gastric discomfort after meals.', 'Mild dyspnea on exertion.', 'Review post-op healing progress.', 'Headache and sleep disturbance.', 'Pediatric vaccination review.'][i],
+      o: 'Vital signs stable. Heart sounds normal. Lungs clear.',
+      a: [['Acute Coronary Syndrome'], ['Type 2 Diabetes Mellitus'], ['Osteoarthritis'], ['Acute Bronchitis'], ['Essential Hypertension'], ['Dyspepsia'], ['Angina Pectoris'], ['Post-Op Status'], ['Migraine'], ['Immunization Complete'][i % 10]],
+      p: 'Prescribed daily medicine regime and light exercises.',
+      medicines: [{ name: 'Medication - Paracetamol 650mg', dose: '1-0-1', freq: 'After meals', duration: '5 Days' }],
+      signed: true,
+      signee: ['Dr. Vikranth Reddy', 'Dr. Ananya Sharma', 'Dr. Sanjay Sen', 'Dr. Meera Nair'][i % 4],
+      consentFlag: true
+    }));
+    for (const c of seedClinicalRecords) {
+      await setDoc(doc(db, "clinicalRecords", c.id), c);
+    }
+
+    // 19. BillingInvoices (10 records)
+    const seedBillingInvoices = Array.from({ length: 10 }, (_, i) => ({
+      id: `INV-${String(700 + i + 1)}`,
+      patientId: `AURA-2026-${String((i % 10) + 1).padStart(4, '0')}`,
+      services: [{ description: ['Outpatient Consultation', 'X-Ray Imaging', 'Pharmacy Dispense', 'Laboratory Panel', 'Ambulance Charge'][i % 5], quantity: 1, rate: [500, 1200, 850, 1500, 1500][i % 5], amount: [500, 1200, 850, 1500, 1500][i % 5] }],
+      subtotal: [500, 1200, 850, 1500, 1500][i % 5],
+      gst: Math.round([500, 1200, 850, 1500, 1500][i % 5] * 0.05),
+      insuranceCover: i % 3 === 0 ? 300 : 0,
+      total: Math.round([500, 1200, 850, 1500, 1500][i % 5] * 1.05) - (i % 3 === 0 ? 300 : 0),
+      status: ['Paid', 'Unsettled', 'Pending'][i % 3],
+      paymentMode: i % 3 === 0 ? ['Cash', 'UPI / QR Code', 'Debit/Credit Card'][i % 3] : 'Cash',
+      date: new Date(Date.now() - i * 24 * 3600 * 1000).toISOString()
+    }));
+    for (const b of seedBillingInvoices) {
+      await setDoc(doc(db, "billingInvoices", b.id), b);
+    }
+
+    // 20. Messages (10 records)
+    const seedMessages = Array.from({ length: 10 }, (_, i) => ({
+      id: `MSG-${String(i+1).padStart(3, '0')}`,
+      senderId: i % 2 === 0 ? `AURA-2026-${String((i % 10) + 1).padStart(4, '0')}` : `DOC00${(i % 4) + 1}`,
+      receiverId: i % 2 === 0 ? `DOC00${(i % 4) + 1}` : `AURA-2026-${String((i % 10) + 1).padStart(4, '0')}`,
+      senderName: i % 2 === 0 ? 'Patient Portal User' : 'Dr. Consultant',
+      text: `Mock message text conversation line #${i+1} for portal sandbox testing.`,
+      timestamp: new Date(Date.now() - i * 3600 * 1000).toISOString()
+    }));
+    for (const m of seedMessages) {
+      await setDoc(doc(db, "messages", m.id), m);
     }
 
     // Seed pharmacy inventory
@@ -717,87 +1027,6 @@ window.bootstrapDatabase = async function() {
       await setDoc(doc(db, "labReagents", lr.id), lr);
     }
 
-    // Seed emergency cases
-    const seedEmergency = [
-      { id: 'ER-101', patientId: 'AURA-2026-0001', triageLevel: 'Red', chiefComplaint: 'Severe chest pain, breathlessness', broughtBy: 'Ambulance (108)', timeOfArrival: new Date().toISOString(), status: 'Active', disposition: 'Resus', mlcFlag: false },
-      { id: 'ER-102', patientId: 'AURA-2026-0002', triageLevel: 'Orange', chiefComplaint: 'Suspected stroke, slurred speech', broughtBy: 'Spouse', timeOfArrival: new Date(Date.now() - 30 * 60 * 1000).toISOString(), status: 'Active', disposition: 'ER Bed', mlcFlag: false },
-      { id: 'ER-103', patientId: 'AURA-2026-0003', triageLevel: 'Yellow', chiefComplaint: 'Laceration on right leg, active bleeding', broughtBy: 'Friend', timeOfArrival: new Date(Date.now() - 60 * 60 * 1000).toISOString(), status: 'Active', disposition: 'ER Bed', mlcFlag: true, mlcDetails: { policeStation: 'Halasuru', firNumber: 'FIR-2026-928', injuryType: 'Laceration', broughtByName: 'Ramesh Singh' } }
-    ];
-    for (const ec of seedEmergency) {
-      await setDoc(doc(db, "emergencyCases", ec.id), ec);
-    }
-
-    // Seed ICU admissions
-    const seedIcu = [
-      { id: 'ICU-201', patientId: 'AURA-2026-0001', bedNumber: 'ICU-Bed 1', diagnosis: 'Acute Coronary Syndrome', ventilatorStatus: true, isolationFlag: false, acuityLevel: 'Critical', nurseId: 'STF003', apacheScore: 24, sofaScore: 8, ewsScore: 6 },
-      { id: 'ICU-202', patientId: 'AURA-2026-0002', bedNumber: 'ICU-Bed 3', diagnosis: 'Ischemic Stroke', ventilatorStatus: false, isolationFlag: false, acuityLevel: 'Stable', nurseId: 'STF003', apacheScore: 12, sofaScore: 4, ewsScore: 2 },
-      { id: 'ICU-203', patientId: 'AURA-2026-0003', bedNumber: 'ICU-Bed 5', diagnosis: 'Polytrauma (Post-Op)', ventilatorStatus: true, isolationFlag: true, acuityLevel: 'Critical', nurseId: 'STF003', apacheScore: 28, sofaScore: 10, ewsScore: 7 }
-    ];
-    for (const ic of seedIcu) {
-      await setDoc(doc(db, "icuAdmissions", ic.id), ic);
-    }
-
-    // Seed surgeries
-    const seedSurgeries = [
-      { id: 'SURG-301', patientId: 'AURA-2026-0001', procedureName: 'Coronary Artery Bypass Graft (CABG)', surgeonId: 'DOC001', anesthetistId: 'DOC002', roomNumber: 'OT-1', scheduledDate: new Date().toISOString().split('T')[0], scheduledTime: '08:00', status: 'In-Progress' },
-      { id: 'SURG-302', patientId: 'AURA-2026-0003', procedureName: 'Open Reduction Internal Fixation (ORIF)', surgeonId: 'DOC003', anesthetistId: 'DOC002', roomNumber: 'OT-2', scheduledDate: new Date(Date.now() + 24*3600*1000).toISOString().split('T')[0], scheduledTime: '10:30', status: 'Scheduled' }
-    ];
-    for (const sg of seedSurgeries) {
-      await setDoc(doc(db, "surgeries", sg.id), sg);
-    }
-
-    // Seed blood stock
-    const seedBlood = [
-      { id: 'BLD-A-POS', bloodGroup: 'A+', component: 'Whole Blood', units: 14, expiry: '2026-07-20' },
-      { id: 'BLD-A-NEG', bloodGroup: 'A-', component: 'PRBC', units: 4, expiry: '2026-07-15' },
-      { id: 'BLD-B-POS', bloodGroup: 'B+', component: 'FFP', units: 18, expiry: '2026-08-12' },
-      { id: 'BLD-B-NEG', bloodGroup: 'B-', component: 'Platelets', units: 3, expiry: '2026-07-02' },
-      { id: 'BLD-AB-POS', bloodGroup: 'AB+', component: 'Whole Blood', units: 8, expiry: '2026-07-28' },
-      { id: 'BLD-AB-NEG', bloodGroup: 'AB-', component: 'PRBC', units: 1, expiry: '2026-07-09' },
-      { id: 'BLD-O-POS', bloodGroup: 'O+', component: 'Platelets', units: 25, expiry: '2026-07-05' },
-      { id: 'BLD-O-NEG', bloodGroup: 'O-', component: 'PRBC', units: 6, expiry: '2026-07-18' }
-    ];
-    for (const bl of seedBlood) {
-      await setDoc(doc(db, "bloodInventory", bl.id), bl);
-    }
-
-    // Seed ambulance fleet
-    const seedAmbulanceFleet = [
-      { id: 'AMB-01', vehicleNum: 'KA-03-GA-1102', type: 'Advanced Life Support (ALS)', status: 'Available', insuranceExpiry: '2027-05-10', lastServiceDate: '2026-04-12' },
-      { id: 'AMB-02', vehicleNum: 'KA-03-GA-1103', type: 'Basic Life Support (BLS)', status: 'Dispatched', insuranceExpiry: '2027-06-22', lastServiceDate: '2026-05-15' },
-      { id: 'AMB-03', vehicleNum: 'KA-03-GA-1104', type: 'ALS', status: 'On-Scene', insuranceExpiry: '2027-01-18', lastServiceDate: '2026-03-20' },
-      { id: 'AMB-04', vehicleNum: 'KA-03-GA-1105', type: 'BLS', status: 'Available', insuranceExpiry: '2027-03-15', lastServiceDate: '2026-05-01' },
-      { id: 'AMB-05', vehicleNum: 'KA-03-GA-1106', type: 'Patient Transport', status: 'Out of Service', insuranceExpiry: '2026-12-05', lastServiceDate: '2026-06-10' }
-    ];
-    for (const am of seedAmbulanceFleet) {
-      await setDoc(doc(db, "ambulanceFleet", am.id), am);
-    }
-
-    // Seed ambulance trips
-    const seedAmbulanceTrips = [
-      { id: 'TRP-801', vehicleId: 'AMB-02', callerName: 'Asha Hegde', pickupLocation: 'MG Road Metro Station', chiefComplaint: 'Suspected trauma after fall', urgency: 'High', status: 'Dispatched', timestamps: { callReceived: new Date(Date.now() - 18 * 60 * 1000).toISOString() } }
-    ];
-    for (const tr of seedAmbulanceTrips) {
-      await setDoc(doc(db, "ambulanceTrips", tr.id), tr);
-    }
-
-    // Seed diet orders
-    const seedDietOrders = [
-      { id: 'DIET-501', patientId: 'AURA-2026-0001', dietType: 'Cardiac / Low Sodium', preference: 'Veg', allergens: ['Nuts'], breakfast: 'Prepared', lunch: 'Pending', dinner: 'Pending' },
-      { id: 'DIET-502', patientId: 'AURA-2026-0002', dietType: 'Regular', preference: 'Non-Veg', allergens: [], breakfast: 'Consumed', lunch: 'Consumed', dinner: 'Pending' }
-    ];
-    for (const dt of seedDietOrders) {
-      await setDoc(doc(db, "dietOrders", dt.id), dt);
-    }
-
-    // Seed blood requests
-    const seedBloodRequests = [
-      { id: 'REQ-901', patientId: 'AURA-2026-0001', bloodGroup: 'A+', units: 2, status: 'Pending' }
-    ];
-    for (const br of seedBloodRequests) {
-      await setDoc(doc(db, "bloodRequests", br.id), br);
-    }
-
     // Seed initial audit log
     const auditLog = {
       id: 'LOG-INIT',
@@ -813,7 +1042,7 @@ window.bootstrapDatabase = async function() {
     await setDoc(doc(db, "auditLogs", auditLog.id), auditLog);
 
     showToast("Firebase Database bootstrapped successfully!", "success");
-    
+
     // Automatically attempt log in if not logged in
     if (!auth.currentUser) {
       await signInWithEmailAndPassword(auth, "user@atralos.com", "Admin123");
@@ -839,7 +1068,13 @@ function loadFromStorage() {
       mobile: await decryptText(p.mobile),
       emergency: await decryptText(p.emergency),
       insurance: await decryptText(p.insurance),
-      abhaId: p.abhaId ? await decryptText(p.abhaId) : ""
+      abhaId: p.abhaId ? await decryptText(p.abhaId) : "",
+      address: p.address ? await decryptText(p.address) : "",
+      occupation: p.occupation ? await decryptText(p.occupation) : "",
+      maritalStatus: p.maritalStatus ? await decryptText(p.maritalStatus) : "",
+      allergies: p.allergies ? await decryptText(p.allergies) : "",
+      chronicConditions: p.chronicConditions ? await decryptText(p.chronicConditions) : "",
+      referredBy: p.referredBy ? await decryptText(p.referredBy) : ""
     })));
     STATE.patients = decrypted;
     if (isInitialLoad && STATE.patients.length === 0) {
@@ -964,6 +1199,11 @@ function loadFromStorage() {
   convex.onUpdate(api.db.getNotifications, {}, (data) => {
     STATE.notifications = data || [];
     updateNotificationBell();
+  });
+
+  convex.onUpdate(api.db.getSystemSettings, {}, (data) => {
+    STATE.systemSettings = (data && data.length > 0) ? (data.find(d => d.id === 'system-settings') || data[0]) : null;
+    applySystemSettingsUI();
   });
 }
 
@@ -1768,6 +2008,15 @@ document.getElementById('btn-submit-registration').addEventListener('click', () 
   const insurance = document.getElementById('reg-insurance').value;
   const academic = document.getElementById('reg-consent-academic').checked;
   const commercial = document.getElementById('reg-consent-commercial').checked;
+  const address = document.getElementById('reg-address-street')?.value || '';
+  const occupation = document.getElementById('reg-occupation')?.value || '';
+  const maritalStatus = document.getElementById('reg-marital')?.value || '';
+  const allergies = document.getElementById('reg-allergies')?.value || '';
+  const chronicConditions = document.getElementById('reg-chronic')?.value || '';
+  const referredBy = document.getElementById('reg-referred-by')?.value || '';
+  
+  const previewImg = document.querySelector('#patient-photo-preview img');
+  const photo = previewImg ? previewImg.src : '';
   
   // ABDM field checking
   const abha = document.getElementById('reception-abha-status-badge').style.display !== 'none' 
@@ -1790,7 +2039,14 @@ document.getElementById('btn-submit-registration').addEventListener('click', () 
     consentCommercial: commercial,
     consentFuture: true,
     regDate: new Date().toISOString(),
-    status: 'Booked'
+    status: 'Booked',
+    photo,
+    address,
+    occupation,
+    maritalStatus,
+    allergies,
+    chronicConditions,
+    referredBy
   };
   
   mutatePatient(newPatient)
@@ -1808,6 +2064,8 @@ document.getElementById('btn-submit-registration').addEventListener('click', () 
   
   // Clear form
   document.getElementById('reception-registration-form').reset();
+  const preview = document.getElementById('patient-photo-preview');
+  if (preview) preview.innerHTML = `<svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>`;
   document.getElementById('reception-abha-status-badge').style.display = 'none';
   document.getElementById('reg-abha-input').value = '';
   document.getElementById('reg-abha-input').disabled = false;
@@ -2418,15 +2676,18 @@ function renderDoctorPrescriptionTable() {
     `;
     tbody.appendChild(tr);
   });
+  if (typeof checkDrugInteractions === 'function') checkDrugInteractions();
 }
 
 window.updatePrescriptionItem = function(idx, field, val) {
   STATE.doctorConsult.prescriptionMedicines[idx][field] = val;
+  if (typeof checkDrugInteractions === 'function') checkDrugInteractions();
 };
 
 window.removePrescriptionItem = function(idx) {
   STATE.doctorConsult.prescriptionMedicines.splice(idx, 1);
   renderDoctorPrescriptionTable();
+  if (typeof checkDrugInteractions === 'function') checkDrugInteractions();
 };
 
 // External Document upload simulation
@@ -2541,7 +2802,11 @@ document.getElementById('btn-doc-esign-finalize').addEventListener('click', () =
 // Click signature canvas simulator
 document.getElementById('esign-canvas-sim').addEventListener('click', function() {
   this.classList.add('signed');
-  this.textContent = "Dr. Vikram Aditya [MCI-224190]";
+  const docName = STATE.currentUserProfile ? STATE.currentUserProfile.name : "Dr. Vikram Aditya";
+  const docLicense = (STATE.currentUserProfile && STATE.currentUserProfile.license) 
+                      ? STATE.currentUserProfile.license 
+                      : (DOCTORS.find(d => d.name === docName)?.license || "MCI-224190");
+  this.textContent = `${docName} [${docLicense}]`;
 });
 
 // Submit sign & close consult
@@ -2553,7 +2818,8 @@ document.getElementById('btn-submit-esign').addEventListener('click', () => {
   }
   
   const p = STATE.patients.find(pt => pt.id === STATE.selectedPatientId);
-  const doc = STAFF_ACCOUNTS.find(s => s.role.toLowerCase().includes('admin')); // Vikram Aditya
+  const docId = STATE.currentUserProfile ? STATE.currentUserProfile.id : 'DOC002';
+  const docName = STATE.currentUserProfile ? STATE.currentUserProfile.name : 'Dr. Vikram Aditya';
   
   const docNotesId = `CLN-${Date.now().toString().slice(-4)}`;
   
@@ -2561,8 +2827,8 @@ document.getElementById('btn-submit-esign').addEventListener('click', () => {
   const newClinical = {
     id: docNotesId,
     patientId: STATE.selectedPatientId,
-    doctorId: 'DOC002',
-    doctorName: doc?.name || 'Dr. Vikram Aditya',
+    doctorId: docId,
+    doctorName: docName,
     date: new Date().toISOString(),
     s: document.getElementById('soap-s').value,
     o: document.getElementById('soap-o').value,
@@ -2570,7 +2836,7 @@ document.getElementById('btn-submit-esign').addEventListener('click', () => {
     p: document.getElementById('soap-p').value,
     medicines: [...STATE.doctorConsult.prescriptionMedicines],
     signed: true,
-    signee: doc?.name || 'Dr. Vikram Aditya',
+    signee: docName,
     consentFlag: document.getElementById('doc-research-flag').checked
   };
   
@@ -2902,17 +3168,34 @@ function selectLabOrder(orderId) {
   document.getElementById('lab-file-pdf').value = '';
 }
 
-// Lab marking draft
-document.getElementById('btn-lab-mark-pending').addEventListener('click', () => {
-  showToast("Draft details saved to local cache.", "info");
-});
+async function saveLabInvestigationToDb(lab, status, val) {
+  try {
+    await convex.mutation(api.db.upsertInvestigation, lab);
+    if (status === 'Final') {
+      logAudit('Create', lab.id, `Report finalized for Lab Test: ${lab.testName} (Value: ${val})`);
+      showToast("Lab report compiled and sent to treating doctor.");
+      routePatientBackIfAllDone(lab.patientId);
+    } else {
+      logAudit('Edit', lab.id, `Saved Draft for Lab Test: ${lab.testName}`);
+      showToast("Draft details saved to database.");
+    }
+    
+    // Reset workspace
+    document.getElementById('lab-workspace').style.display = 'none';
+    document.getElementById('lab-empty-state').style.display = 'flex';
+    STATE.activeLabOrderId = null;
+    renderLabQueue();
+  } catch (err) {
+    console.error(err);
+    showToast("Error saving lab report: " + err.message, "error");
+  }
+}
 
-// Finalize lab test
-document.getElementById('btn-lab-submit-final').addEventListener('click', () => {
+async function submitLabReport(status) {
   const val = document.getElementById('lab-param-value').value;
   const notes = document.getElementById('lab-param-notes').value;
   
-  if (!val) {
+  if (status === 'Final' && !val) {
     showToast("Please record the observed test parameter value.", "error");
     return;
   }
@@ -2921,30 +3204,32 @@ document.getElementById('btn-lab-submit-final').addEventListener('click', () => 
   if (!lab) return;
   
   lab.value = val;
-  lab.comments = notes || 'Observations conform to test standards.';
-  lab.status = 'Final';
-  lab.returnToDoctor = true;
+  lab.comments = notes || (status === 'Final' ? 'Observations conform to test standards.' : '');
+  lab.status = status;
   lab.date = new Date().toISOString();
-  
-  convex.mutation(api.db.upsertInvestigation, lab)
-    .then(() => {
-      logAudit('Create', lab.id, `Report finalized for Lab Test: ${lab.testName} (Value: ${val})`);
-      showToast("Lab report compiled and sent to treating doctor.");
-      // Check if ALL investigations for this patient are now Final
-      routePatientBackIfAllDone(lab.patientId);
-    })
-    .catch(err => {
-      console.error(err);
-      showToast("Error finalizing lab report: " + err.message, "error");
-    });
-  
-  // Reset
-  document.getElementById('lab-workspace').style.display = 'none';
-  document.getElementById('lab-empty-state').style.display = 'flex';
-  STATE.activeLabOrderId = null;
-  
-  renderLabQueue();
-});
+  if (status === 'Final') {
+    lab.returnToDoctor = true;
+  }
+
+  const fileInput = document.getElementById('lab-file-pdf');
+  if (fileInput && fileInput.files && fileInput.files[0]) {
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      lab.attachment = e.target.result; // base64 string
+      await saveLabInvestigationToDb(lab, status, val);
+    };
+    reader.readAsDataURL(file);
+  } else {
+    await saveLabInvestigationToDb(lab, status, val);
+  }
+}
+
+// Lab marking draft
+document.getElementById('btn-lab-mark-pending').addEventListener('click', () => submitLabReport('Draft'));
+
+// Finalize lab test
+document.getElementById('btn-lab-submit-final').addEventListener('click', () => submitLabReport('Final'));
 
 // ==========================================
 // 11. MODULE: RADIOLOGY WORKFLOWS
@@ -3192,7 +3477,52 @@ document.getElementById('btn-pharmacy-complete').addEventListener('click', () =>
 
 // Print label
 document.getElementById('btn-pharmacy-print-slip').addEventListener('click', () => {
-  showToast("Dispensation labels sent to labeller.", "info");
+  const rx = STATE.investigations.find(i => i.id === STATE.activePrescriptionId);
+  if (!rx) {
+    showToast("Please select a prescription first.", "error");
+    return;
+  }
+  
+  const patientName = getPatientName(rx.patientId);
+  
+  const labelBody = document.getElementById('pharmacy-label-body');
+  if (labelBody) {
+    let medListHtml = '';
+    rx.medicines.forEach(med => {
+      const status = med.dispenseStatus || 'Dispensed';
+      medListHtml += `
+        <div style="margin-bottom:10px;border-bottom:1px solid #ccc;padding-bottom:5px">
+          <strong>${med.name.replace('Medication - ', '')}</strong> (${status})<br>
+          <small>Dose: ${med.dose} | Frequency: ${med.freq} | Duration: ${med.duration}</small><br>
+          <small>Instructions: Take with water after meals.</small>
+        </div>
+      `;
+    });
+    
+    labelBody.innerHTML = `
+      <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:10px;color:#000">
+        <h2 style="font-size:1.1rem;margin:0;">AURATRAL GENERAL HOSPITAL</h2>
+        <small>Pharmacy Department | Helpline: +91 80 1234 5678</small>
+      </div>
+      <div style="color:#000">
+        <strong>Patient Name:</strong> ${patientName}<br>
+        <strong>Patient ID:</strong> ${rx.patientId}<br>
+        <strong>Rx Ref ID:</strong> ${rx.id}<br>
+        <strong>Date:</strong> ${new Date().toLocaleDateString()}<br>
+      </div>
+      <div style="margin-top:15px;margin-bottom:15px;color:#000">
+        <h3 style="font-size:0.9rem;margin-bottom:8px;border-bottom:1px solid #000;padding-bottom:3px">PRESCRIBED INSTRUCTIONS</h3>
+        ${medListHtml}
+      </div>
+      <div style="text-align:center;font-size:0.7rem;margin-top:15px;color:#000">
+        Keep out of reach of children. Store in a cool dry place.<br>
+        <strong>Thank you for choosing Auratral!</strong>
+      </div>
+    `;
+  }
+  
+  document.getElementById('modal-pharmacy-label').classList.add('open');
+  logAudit('View', rx.id, `Printed dispensation label for patient: ${patientName}`);
 });
 
 // ==========================================
@@ -3200,6 +3530,7 @@ document.getElementById('btn-pharmacy-print-slip').addEventListener('click', () 
 // ==========================================
 
 function renderFinanceQueue() {
+  if (typeof renderFinanceDashboardStats === 'function') renderFinanceDashboardStats();
   const list = document.getElementById('finance-billing-list');
   list.innerHTML = '';
   
@@ -4133,7 +4464,7 @@ function renderDevicesTable() {
       <td>${dev.department} — ${dev.location}</td>
       <td><span class="status-indicator ${statusClass}">${dev.status}</span></td>
       <td>${dev.maintenanceDue}</td>
-      <td><button class="glass-btn glass-btn-secondary" style="padding:3px 8px;font-size:.72rem" onclick="showToast('Device service log opened', 'info')">Details</button></td>
+      <td><button class="glass-btn glass-btn-secondary" style="padding:3px 8px;font-size:.72rem" onclick="showDeviceDetails('${dev.id}')">Details</button></td>
     `;
     tbody.appendChild(tr);
   });
@@ -4215,7 +4546,7 @@ function renderBedGrid() {
     const borderMap = { available: 'var(--success)', occupied: 'var(--info)', cleaning: 'var(--warning)' };
     const patient = bed.patient ? STATE.patients.find(p => p.id === bed.patient) : null;
     return `
-      <div class="bed-cell" style="background:${colorMap[bed.status]};border:1px solid ${borderMap[bed.status]};border-radius:6px;padding:6px 8px;text-align:center;cursor:pointer;min-width:60px" title="${bed.status}${patient ? ' — ' + patient.name : ''}">
+      <div class="bed-cell" style="background:${colorMap[bed.status]};border:1px solid ${borderMap[bed.status]};border-radius:6px;padding:6px 8px;text-align:center;cursor:pointer;min-width:60px" title="${bed.status}${patient ? ' — ' + patient.name : ''}" onclick="handleBedClick('${bed.id}')">
         <div style="font-size:.72rem;font-weight:700;color:var(--text-1)">${bed.id}</div>
         <div style="font-size:.58rem;color:var(--text-2);text-transform:capitalize">${bed.status}</div>
         ${patient ? `<div style="font-size:.55rem;color:var(--primary);margin-top:1px">${patient.name.split(' ')[0]}</div>` : ''}
@@ -7160,4 +7491,654 @@ window.renderAdminDashboardStats = function() {
   if (elDevices) elDevices.textContent = deviceCount;
   if (elComplaints) elComplaints.textContent = openComplaints;
 };
+
+// ==========================================
+// 23. MVP EXPANSION ENHANCEMENTS
+// ==========================================
+
+function applySystemSettingsUI() {
+  const settings = STATE.systemSettings;
+  if (!settings) return;
+
+  const hn = document.getElementById('settings-hospital-name');
+  if (hn) hn.value = settings.hospitalName || '';
+
+  const hhl = document.getElementById('settings-hospital-helpline');
+  if (hhl) hhl.value = settings.helpline || '';
+
+  const p2fa = document.getElementById('policy-2fa');
+  if (p2fa) p2fa.checked = settings.policy2fa !== false;
+
+  const st = document.getElementById('settings-session-timeout');
+  if (st) st.value = settings.sessionTimeout || '30 min';
+
+  const pp = document.getElementById('settings-password-policy');
+  if (pp) pp.value = settings.passwordPolicy || 'Strong';
+
+  const iw = document.getElementById('settings-ip-whitelisting');
+  if (iw) iw.checked = !!settings.ipWhitelisting;
+
+  const mph = document.getElementById('module-pharmacy');
+  if (mph) mph.checked = settings.modulePharmacy !== false;
+
+  const mra = document.getElementById('module-radiology');
+  if (mra) mra.checked = settings.moduleRadiology !== false;
+
+  const mla = document.getElementById('module-lab');
+  if (mla) mla.checked = settings.moduleLab !== false;
+
+  const mpp = document.getElementById('module-patient-portal');
+  if (mpp) mpp.checked = settings.modulePatientPortal !== false;
+
+  const mat = document.getElementById('module-ai-triage');
+  if (mat) mat.checked = settings.moduleAiTriage !== false;
+
+  const pr = document.getElementById('policy-retention');
+  if (pr) pr.value = settings.policyRetention || '7';
+
+  // Toggle roles visibility in global role selector
+  const select = document.getElementById('global-role-select');
+  if (select) {
+    Array.from(select.options).forEach(opt => {
+      const val = opt.value;
+      let visible = true;
+      if (val === 'pharmacy' && !settings.modulePharmacy) visible = false;
+      if (val === 'radiology' && !settings.moduleRadiology) visible = false;
+      if (val === 'lab' && !settings.moduleLab) visible = false;
+      if (val === 'patient' && !settings.modulePatientPortal) visible = false;
+      opt.style.display = visible ? '' : 'none';
+    });
+  }
+
+  // Refresh current sidebar nav
+  renderSidebarNav();
+}
+
+window.saveSystemSettings = async function() {
+  const hospitalName = document.getElementById('settings-hospital-name')?.value || '';
+  const helpline = document.getElementById('settings-hospital-helpline')?.value || '';
+  const policy2fa = document.getElementById('policy-2fa')?.checked || false;
+  const sessionTimeout = document.getElementById('settings-session-timeout')?.value || '';
+  const passwordPolicy = document.getElementById('settings-password-policy')?.value || '';
+  const ipWhitelisting = document.getElementById('settings-ip-whitelisting')?.checked || false;
+  const modulePharmacy = document.getElementById('module-pharmacy')?.checked || false;
+  const moduleRadiology = document.getElementById('module-radiology')?.checked || false;
+  const moduleLab = document.getElementById('module-lab')?.checked || false;
+  const modulePatientPortal = document.getElementById('module-patient-portal')?.checked || false;
+  const moduleAiTriage = document.getElementById('module-ai-triage')?.checked || false;
+  const policyRetention = document.getElementById('policy-retention')?.value || '';
+
+  const docData = {
+    id: 'system-settings',
+    hospitalName,
+    helpline,
+    policy2fa,
+    sessionTimeout,
+    passwordPolicy,
+    ipWhitelisting,
+    modulePharmacy,
+    moduleRadiology,
+    moduleLab,
+    modulePatientPortal,
+    moduleAiTriage,
+    policyRetention
+  };
+
+  try {
+    await convex.mutation(api.db.upsertSystemSettings, docData);
+    showToast('System settings saved successfully!');
+    logAudit('Edit', 'SYS', 'Updated System Settings & Compliance Policies');
+  } catch (error) {
+    showToast('Failed to save settings: ' + error.message, 'error');
+  }
+};
+
+window.exportAllCollectionsToCSV = function() {
+  let csvContent = "";
+
+  const collections = [
+    { name: "Patients", data: STATE.patients },
+    { name: "Appointments", data: STATE.appointments },
+    { name: "ClinicalRecords", data: STATE.clinicalRecords },
+    { name: "Investigations", data: STATE.investigations },
+    { name: "BillingInvoices", data: STATE.billingInvoices },
+    { name: "AuditLogs", data: STATE.auditLogs },
+    { name: "Vitals", data: STATE.vitals },
+    { name: "Devices", data: STATE.devices },
+    { name: "Complaints", data: STATE.complaints },
+    { name: "Notifications", data: STATE.notifications },
+    { name: "EmergencyCases", data: STATE.emergencyCases },
+    { name: "IcuAdmissions", data: STATE.icuAdmissions },
+    { name: "IcuCharting", data: STATE.icuCharting },
+    { name: "Surgeries", data: STATE.surgeries },
+    { name: "OtSchedule", data: STATE.otSchedule },
+    { name: "BloodInventory", data: STATE.bloodInventory },
+    { name: "Donors", data: STATE.donors },
+    { name: "BloodRequests", data: STATE.bloodRequests },
+    { name: "DietOrders", data: STATE.dietOrders },
+    { name: "AmbulanceTrips", data: STATE.ambulanceTrips },
+    { name: "AmbulanceFleet", data: STATE.ambulanceFleet },
+    { name: "DischargeSummaries", data: STATE.dischargeSummaries },
+    { name: "Messages", data: STATE.messages },
+    { name: "PharmacyInventory", data: STATE.pharmacyInventory },
+    { name: "LabReagents", data: STATE.labReagents }
+  ];
+
+  collections.forEach(col => {
+    csvContent += `=== COLLECTION: ${col.name.toUpperCase()} ===\n`;
+    if (col.data.length === 0) {
+      csvContent += "(empty)\n\n";
+      return;
+    }
+    
+    const headers = Object.keys(col.data[0]);
+    csvContent += headers.join(",") + "\n";
+    
+    col.data.forEach(row => {
+      const line = headers.map(header => {
+        let val = row[header];
+        if (val === undefined || val === null) return "";
+        if (typeof val === 'object') {
+          val = JSON.stringify(val);
+        } else {
+          val = String(val);
+        }
+        val = val.replace(/"/g, '""');
+        if (val.includes(",") || val.includes("\n") || val.includes('"')) {
+          val = `"${val}"`;
+        }
+        return val;
+      });
+      csvContent += line.join(",") + "\n";
+    });
+    csvContent += "\n";
+  });
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", `AtralOS_Backup_${new Date().toISOString().split('T')[0]}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  showToast("All collections exported to CSV successfully!");
+  logAudit('View', 'SYS', 'Executed Hospital Database CSV Export');
+};
+
+window.schedulePortalAppointment = async function() {
+  const patientId = STATE.patientPWA.activePatientId;
+  if (!patientId) {
+    showToast("Please log in to your patient portal first.", "error");
+    return;
+  }
+
+  const docList = DOCTORS.map((d, idx) => `${idx + 1}. ${d.name} (${d.dept})`).join('\n');
+  const docChoice = prompt(`Select Doctor:\n${docList}\n\nEnter number (1-${DOCTORS.length}):`, "1");
+  if (!docChoice) return;
+  const docIdx = parseInt(docChoice) - 1;
+  const doctor = DOCTORS[docIdx];
+  if (!doctor) {
+    showToast("Invalid doctor selection", "error");
+    return;
+  }
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const defaultDate = tomorrow.toISOString().split('T')[0];
+  const dateStr = prompt("Enter Appointment Date (YYYY-MM-DD):", defaultDate);
+  if (!dateStr) return;
+
+  const timeStr = prompt("Enter Appointment Time (HH:MM):", "10:00");
+  if (!timeStr) return;
+
+  const visitType = prompt("Enter Visit Type (New, Follow-up, Routine, Health Checkup):", "New");
+  if (!visitType) return;
+
+  const token = STATE.appointments.filter(a => a.doctorId === doctor.id && a.date === dateStr).length + 1;
+
+  const aptId = `APT-${Date.now().toString().slice(-4)}`;
+  const newApt = {
+    id: aptId,
+    patientId: patientId,
+    doctorId: doctor.id,
+    department: doctor.dept,
+    date: dateStr,
+    time: timeStr,
+    type: visitType,
+    status: 'Booked',
+    token: token,
+    investigationStatus: 'None',
+    timestamp: new Date().toISOString()
+  };
+
+  try {
+    await convex.mutation(api.db.upsertAppointment, newApt);
+    showToast(`Appointment successfully scheduled! Token: #${token}`);
+    logAudit('Create', aptId, `Patient scheduled appointment online with ${doctor.name}`);
+    renderPatientPortalPWA();
+  } catch (err) {
+    showToast("Failed to book appointment: " + err.message, "error");
+  }
+};
+
+window.showDeviceDetails = function(deviceId) {
+  const dev = (STATE.devices.length > 0 ? STATE.devices : SEED_DEVICES).find(d => d.id === deviceId);
+  if (!dev) return;
+
+  const body = document.getElementById('device-detail-body');
+  if (body) {
+    body.innerHTML = `
+      <div style="font-size: 0.85rem; line-height: 1.5; color: var(--text-1);">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          <strong>Device Name:</strong> <span>${dev.name}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          <strong>Device ID:</strong> <span>${dev.id}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          <strong>Type:</strong> <span>${dev.type}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          <strong>Department:</strong> <span>${dev.department}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          <strong>Location:</strong> <span>${dev.location || 'N/A'}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          <strong>Serial Number:</strong> <code>${dev.serialNumber || 'SN-N/A'}</code>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          <strong>Current Status:</strong> <span class="status-indicator ${dev.status === 'Active' ? 'status-done' : 'status-canceled'}">${dev.status}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          <strong>Last Service Date:</strong> <span>${dev.lastServiceDate || 'N/A'}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          <strong>Next Maintenance Due:</strong> <span>${dev.maintenanceDue || 'N/A'}</span>
+        </div>
+        <div style="margin-top:15px;">
+          <strong>Maintenance / Service Logs:</strong>
+          <div style="background:var(--bg); border:1px solid var(--border); padding:8px; border-radius:4px; font-size:0.75rem; color:var(--text-2); margin-top:6px; font-family:monospace; white-space:pre-wrap;">
+${dev.notes || 'No active service/maintenance logs filed.'}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  document.getElementById('modal-device-detail').classList.add('open');
+  logAudit('View', dev.id, `Opened Device Maintenance Details for ${dev.name}`);
+};
+
+window.handleBedClick = function(bedId) {
+  const bed = BED_DATA.find(b => b.id === bedId);
+  if (!bed) return;
+
+  if (bed.status === 'occupied') {
+    const patient = STATE.patients.find(p => p.id === bed.patient);
+    if (!patient) return;
+    const targetBedId = prompt(`Transfer patient ${patient.name} (${patient.id}) from ${bedId}. Enter destination bed ID (e.g., WA-01):`);
+    if (targetBedId) {
+      const destBed = BED_DATA.find(b => b.id === targetBedId.toUpperCase());
+      if (!destBed) {
+        showToast(`Invalid bed ID: ${targetBedId}`, 'error');
+        return;
+      }
+      if (destBed.status !== 'available') {
+        showToast(`Destination bed ${targetBedId} is not available (status: ${destBed.status})`, 'error');
+        return;
+      }
+      destBed.status = 'occupied';
+      destBed.patient = bed.patient;
+      bed.status = 'cleaning';
+      delete bed.patient;
+      
+      const pat = STATE.patients.find(p => p.id === destBed.patient);
+      if (pat) {
+        pat.bedAssignment = targetBedId.toUpperCase();
+        mutatePatient(pat);
+      }
+      
+      showToast(`Transferred patient to ${targetBedId.toUpperCase()}`);
+      logAudit('Edit', destBed.patient, `Transferred bed from ${bedId} to ${targetBedId.toUpperCase()}`);
+      renderBedGrid();
+    }
+  } else if (bed.status === 'available') {
+    const patientId = prompt(`Assign patient to bed ${bedId}. Enter Patient ID (e.g. AURA-2026-0001):`);
+    if (patientId) {
+      const pat = STATE.patients.find(p => p.id === patientId.toUpperCase());
+      if (!pat) {
+        showToast(`Patient ID ${patientId} not found`, 'error');
+        return;
+      }
+      const existingBed = BED_DATA.find(b => b.patient === pat.id);
+      if (existingBed) {
+        showToast(`Patient is already assigned to bed ${existingBed.id}`, 'error');
+        return;
+      }
+      
+      bed.status = 'occupied';
+      bed.patient = pat.id;
+      pat.bedAssignment = bedId;
+      pat.status = 'Admitted';
+      
+      mutatePatient(pat);
+      showToast(`Assigned ${pat.name} to bed ${bedId}`);
+      logAudit('Edit', pat.id, `Assigned patient to bed ${bedId}`);
+      renderBedGrid();
+    }
+  } else if (bed.status === 'cleaning') {
+    if (confirm(`Mark bed ${bedId} as Available?`)) {
+      bed.status = 'available';
+      showToast(`Bed ${bedId} is now available`);
+      renderBedGrid();
+    }
+  }
+};
+
+window.updateAiDiagnosis = function() {
+  const panel = document.getElementById('ai-diagnosis-panel');
+  const suggestions = document.getElementById('ai-diagnosis-suggestions');
+  if (!panel || !suggestions) return;
+
+  const sText = (document.getElementById('soap-s')?.value || '').toLowerCase();
+  if (sText.length < 3) {
+    panel.style.display = 'none';
+    return;
+  }
+
+  let codeSuggestions = [];
+  if (sText.includes("chest") || sText.includes("breath") || sText.includes("heart")) {
+    codeSuggestions = ["Acute Coronary Syndrome (I24.9)", "Angina Pectoris (I20.9)", "Myocardial Infarction (I21.9)"];
+  } else if (sText.includes("fever") || sText.includes("cough") || sText.includes("chill")) {
+    codeSuggestions = ["Viral Fever (A99)", "Acute Bronchitis (J20.9)", "Pneumonia (J18.9)"];
+  } else if (sText.includes("head") || sText.includes("migraine") || sText.includes("dizzy")) {
+    codeSuggestions = ["Migraine (G43.9)", "Tension Headache (G44.2)", "Vertigo (R42)"];
+  } else if (sText.includes("stomach") || sText.includes("abdominal") || sText.includes("vomit")) {
+    codeSuggestions = ["Acute Gastritis (K29.0)", "Irritable Bowel Syndrome (K58.9)", "Gastroenteritis (A09)"];
+  } else {
+    codeSuggestions = ["Essential Hypertension (I10)", "Type 2 Diabetes Mellitus (E11.9)", "General Debility (R53.89)"];
+  }
+
+  panel.style.display = 'block';
+  suggestions.innerHTML = codeSuggestions.map(s => `<span class="tag-chip" style="cursor:pointer; background:var(--light-purple); color:var(--primary); padding:3px 8px; border-radius:4px; margin-right:4px; font-size:0.7rem; display:inline-block;" onclick="addSoapDiagTag('${s.replace(/'/g, "\\'")}')">${s}</span>`).join(' ');
+};
+
+window.addSoapDiagTag = function(tag) {
+  const cleanTag = tag.split(' (')[0];
+  if (!STATE.doctorConsult.soapA_Tags.includes(cleanTag)) {
+    STATE.doctorConsult.soapA_Tags.push(cleanTag);
+    renderDoctorSoapTags();
+  }
+};
+
+window.checkDrugInteractions = function() {
+  const alertEl = document.getElementById('drug-interaction-alert');
+  if (!alertEl) return;
+
+  const meds = STATE.doctorConsult.prescriptionMedicines;
+  if (meds.length < 2) {
+    alertEl.style.display = 'none';
+    return;
+  }
+
+  const names = meds.map(m => m.name.toLowerCase());
+  const warnings = [];
+
+  const uniqueNames = new Set();
+  meds.forEach(m => {
+    const name = m.name.split(' - ')[1] || m.name;
+    if (uniqueNames.has(name.toLowerCase())) {
+      warnings.push(`⚠️ Duplicate Drug Alert: <strong>${name}</strong> is prescribed multiple times.`);
+    } else {
+      uniqueNames.add(name.toLowerCase());
+    }
+  });
+
+  const hasMetformin = names.some(n => n.includes('metformin'));
+  const hasAmlodipine = names.some(n => n.includes('amlodipine'));
+  const hasAmoxicillin = names.some(n => n.includes('amoxicillin'));
+  const hasParacetamol = names.some(n => n.includes('paracetamol'));
+
+  if (hasMetformin && hasAmlodipine) {
+    warnings.push(`⚠️ Drug-Drug Interaction: <strong>Metformin + Amlodipine</strong>. Risk of altered glycemic control. Monitor glucose levels.`);
+  }
+  if (hasAmoxicillin && hasParacetamol) {
+    warnings.push(`ℹ️ Clinical Note: <strong>Amoxicillin + Paracetamol</strong>. Administer at different times if gastric discomfort occurs.`);
+  }
+
+  if (warnings.length > 0) {
+    alertEl.style.display = 'block';
+    alertEl.innerHTML = warnings.join('<br>');
+  } else {
+    alertEl.style.display = 'none';
+  }
+};
+
+window.updateDispenseStatus = function(idx, val) {
+  const rx = STATE.investigations.find(i => i.id === STATE.activePrescriptionId);
+  if (rx && rx.medicines[idx]) {
+    rx.medicines[idx].dispenseStatus = val;
+    const subInput = document.getElementById(`pharmacy-sub-${idx}`);
+    if (subInput) {
+      rx.medicines[idx].substitute = subInput.value;
+    }
+    showToast(`Updated item ${idx + 1} status to ${val}`, 'info');
+  }
+};
+
+window.renderFinanceDashboardStats = function() {
+  const cardsContainer = document.getElementById('finance-revenue-cards');
+  const deptContainer = document.getElementById('finance-dept-revenue');
+  if (!cardsContainer || !deptContainer) return;
+
+  const invoices = STATE.billingInvoices || [];
+  
+  let totalToday = 0;
+  let totalWeek = 0;
+  let totalMonth = 0;
+  let totalOutstanding = 0;
+  
+  let deptRev = { OPD: 0, Radiology: 0, Pharmacy: 0, Lab: 0, Other: 0 };
+
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const weekStart = todayStart - (7 * 24 * 60 * 60 * 1000);
+  const monthStart = todayStart - (30 * 24 * 60 * 60 * 1000);
+
+  invoices.forEach(inv => {
+    const invDate = new Date(inv.date || inv.timestamp || now).getTime();
+    const isPaid = inv.status === 'Paid';
+    const amount = inv.total || 0;
+
+    if (isPaid) {
+      if (invDate >= todayStart) {
+        totalToday += amount;
+      }
+      if (invDate >= weekStart) {
+        totalWeek += amount;
+      }
+      if (invDate >= monthStart) {
+        totalMonth += amount;
+      }
+
+      const services = inv.services || [];
+      services.forEach(serv => {
+        const desc = (serv.description || '').toLowerCase();
+        const amt = serv.amount || 0;
+        if (desc.includes('consult') || desc.includes('visit') || desc.includes('opd')) {
+          deptRev.OPD += amt;
+        } else if (desc.includes('x-ray') || desc.includes('mri') || desc.includes('ct') || desc.includes('scan') || desc.includes('radiology') || desc.includes('ultrasound')) {
+          deptRev.Radiology += amt;
+        } else if (desc.includes('medicine') || desc.includes('pharmacy') || desc.includes('tablet') || desc.includes('capsule') || desc.includes('syrup')) {
+          deptRev.Pharmacy += amt;
+        } else if (desc.includes('lab') || desc.includes('cbc') || desc.includes('blood') || desc.includes('urine') || desc.includes('pathology') || desc.includes('glucose') || desc.includes('panel')) {
+          deptRev.Lab += amt;
+        } else {
+          deptRev.Other += amt;
+        }
+      });
+    } else if (inv.status === 'Unsettled' || inv.status === 'Pending') {
+      totalOutstanding += amount;
+    }
+  });
+
+  cardsContainer.innerHTML = `
+    <div class="glass-card revenue-card" style="border-left:4px solid var(--success)">
+      <div class="rev-amount" style="color:var(--success)">₹${totalToday.toLocaleString('en-IN')}</div>
+      <div class="rev-label">Today</div>
+    </div>
+    <div class="glass-card revenue-card" style="border-left:4px solid var(--info)">
+      <div class="rev-amount" style="color:var(--info)">₹${totalWeek.toLocaleString('en-IN')}</div>
+      <div class="rev-label">This Week</div>
+    </div>
+    <div class="glass-card revenue-card" style="border-left:4px solid var(--primary)">
+      <div class="rev-amount" style="color:var(--primary)">₹${totalMonth.toLocaleString('en-IN')}</div>
+      <div class="rev-label">This Month</div>
+    </div>
+    <div class="glass-card revenue-card" style="border-left:4px solid var(--danger)">
+      <div class="rev-amount" style="color:var(--danger)">₹${totalOutstanding.toLocaleString('en-IN')}</div>
+      <div class="rev-label">Outstanding</div>
+    </div>
+  `;
+
+  const maxRev = Math.max(1, deptRev.OPD, deptRev.Radiology, deptRev.Pharmacy, deptRev.Lab, deptRev.Other);
+  const getWidthPct = (val) => Math.max(5, Math.round((val / maxRev) * 100)) + '%';
+
+  deptContainer.innerHTML = `
+    <h3 class="form-title">Department Revenue</h3>
+    <div class="dept-revenue-bar">
+      <span style="width:80px;flex-shrink:0">OPD</span>
+      <div style="flex:1;background:var(--bg);border-radius:4px;overflow:hidden">
+        <div class="bar-fill" style="width:${getWidthPct(deptRev.OPD)}"></div>
+      </div>
+      <span style="font-weight:600;width:80px;text-align:right">₹${deptRev.OPD.toLocaleString('en-IN')}</span>
+    </div>
+    <div class="dept-revenue-bar">
+      <span style="width:80px;flex-shrink:0">Radiology</span>
+      <div style="flex:1;background:var(--bg);border-radius:4px;overflow:hidden">
+        <div class="bar-fill" style="width:${getWidthPct(deptRev.Radiology)}"></div>
+      </div>
+      <span style="font-weight:600;width:80px;text-align:right">₹${deptRev.Radiology.toLocaleString('en-IN')}</span>
+    </div>
+    <div class="dept-revenue-bar">
+      <span style="width:80px;flex-shrink:0">Pharmacy</span>
+      <div style="flex:1;background:var(--bg);border-radius:4px;overflow:hidden">
+        <div class="bar-fill" style="width:${getWidthPct(deptRev.Pharmacy)}"></div>
+      </div>
+      <span style="font-weight:600;width:80px;text-align:right">₹${deptRev.Pharmacy.toLocaleString('en-IN')}</span>
+    </div>
+    <div class="dept-revenue-bar">
+      <span style="width:80px;flex-shrink:0">Lab</span>
+      <div style="flex:1;background:var(--bg);border-radius:4px;overflow:hidden">
+        <div class="bar-fill" style="width:${getWidthPct(deptRev.Lab)}"></div>
+      </div>
+      <span style="font-weight:600;width:80px;text-align:right">₹${deptRev.Lab.toLocaleString('en-IN')}</span>
+    </div>
+    ${deptRev.Other > 0 ? `
+    <div class="dept-revenue-bar">
+      <span style="width:80px;flex-shrink:0">Other</span>
+      <div style="flex:1;background:var(--bg);border-radius:4px;overflow:hidden">
+        <div class="bar-fill" style="width:${getWidthPct(deptRev.Other)}"></div>
+      </div>
+      <span style="font-weight:600;width:80px;text-align:right">₹${deptRev.Other.toLocaleString('en-IN')}</span>
+    </div>
+    ` : ''}
+  `;
+};
+
+window.renderLabQC = function() {
+  const container = document.getElementById('lab-qc');
+  if (!container) return;
+
+  const completed = STATE.investigations.filter(i => i.type === 'Lab' && i.status === 'Final');
+  let avgTat = 35;
+  if (completed.length > 0) {
+    let totalDiff = 0;
+    let count = 0;
+    completed.forEach(c => {
+      if (c.timestamp && c.date) {
+        const diffMs = new Date(c.date) - new Date(c.timestamp);
+        const diffMin = Math.round(diffMs / (60 * 1000));
+        if (diffMin > 0 && diffMin < 1440) {
+          totalDiff += diffMin;
+          count++;
+        }
+      }
+    });
+    if (count > 0) {
+      avgTat = Math.round(totalDiff / count);
+    }
+  }
+
+  const accuracy = Math.max(95, Math.min(100, 99.8 - (completed.length * 0.05))).toFixed(1);
+  const alerts = STATE.labReagents.filter(r => r.status === 'Critical' || r.status === 'Low').length;
+
+  container.innerHTML = `
+    <h3 class="form-title">Laboratory Quality Control Dashboard</h3>
+    <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-top:12px; gap: 10px;">
+      <div class="glass-card" style="text-align:center; padding:12px;">
+        <strong>Accuracy Rate</strong>
+        <div style="font-size:1.6rem; font-weight:700; color:var(--success); margin-top:6px;">${accuracy}%</div>
+      </div>
+      <div class="glass-card" style="text-align:center; padding:12px;">
+        <strong>Avg Turnaround Time</strong>
+        <div style="font-size:1.6rem; font-weight:700; color:var(--info); margin-top:6px;">${avgTat} Min</div>
+      </div>
+      <div class="glass-card" style="text-align:center; padding:12px;">
+        <strong>Active QC Alerts</strong>
+        <div style="font-size:1.6rem; font-weight:700; color:${alerts > 0 ? 'var(--danger)' : 'var(--success)'}; margin-top:6px;">${alerts}</div>
+      </div>
+    </div>
+  `;
+};
+
+window.renderLabCompleted = function() {
+  const container = document.getElementById('lab-completed');
+  if (!container) return;
+  
+  const completed = STATE.investigations.filter(i => i.status === 'Final' && i.type === 'Lab');
+  if (completed.length === 0) {
+    container.innerHTML = `<p style="padding:20px; text-align:center; color:var(--text-2);">No completed lab reports logged.</p>`;
+    return;
+  }
+
+  let html = '<h3 class="form-title">Completed Lab Reports</h3><div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">';
+  completed.forEach(i => {
+    html += `
+      <div class="glass-card" style="padding:10px;">
+        <div class="flex-between"><strong>${i.testName}</strong> <span class="status-indicator status-done">Final</span></div>
+        <div style="font-size:0.75rem;margin-top:4px;">Patient ID: ${i.patientId} | Parameter: ${i.parameter || 'N/A'}</div>
+        <div style="font-size:0.75rem;">Observed Value: <strong>${i.value}</strong> | Reference Range: ${i.refRange || 'N/A'}</div>
+        ${i.comments ? `<div style="font-size:0.7rem;color:var(--text-2);margin-top:2px;">Comments: ${i.comments}</div>` : ''}
+        ${i.attachment ? `<button class="glass-btn glass-btn-secondary" style="padding:2px 8px; font-size:0.7rem; margin-top:6px;" onclick="viewAttachedDocument('${i.id}')">View PDF Report</button>` : ''}
+      </div>
+    `;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+};
+
+window.viewAttachedDocument = function(id) {
+  const inv = STATE.investigations.find(i => i.id === id);
+  if (!inv || !inv.attachment) return;
+  
+  const modal = document.getElementById('modal-file-viewer');
+  const title = document.getElementById('file-viewer-title');
+  const body = document.getElementById('file-viewer-body');
+  
+  if (modal && title && body) {
+    title.textContent = `PDF Document: ${inv.testName}`;
+    body.innerHTML = `<embed src="${inv.attachment}" type="application/pdf" style="width:100%;height:450px;">`;
+    modal.classList.add('open');
+  }
+};
+
+// Bind listeners when document is loaded
+setTimeout(() => {
+  document.getElementById('soap-s')?.addEventListener('input', updateAiDiagnosis);
+}, 1000);
+
 
