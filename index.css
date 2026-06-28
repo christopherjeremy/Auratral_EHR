@@ -105,7 +105,10 @@ svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; 
 /* =============================================
    7. Page Container & Header (NO SIDEBAR)
    ============================================= */
-.main-content { margin-top: var(--topnav-height); padding: 20px 24px; max-width: 1400px; margin-left: auto; margin-right: auto; animation: fadeIn .3s ease; }
+.app-layout { display: flex; min-height: calc(100vh - var(--topnav-height)); margin-top: var(--topnav-height); }
+.sidebar { width: 220px; background: var(--surface); border-right: 1px solid var(--border); flex-shrink: 0; display: flex; flex-direction: column; overflow-y: auto; }
+.sidebar-nav-menu { list-style: none; padding: 10px 0; margin: 0; }
+.main-content { flex: 1; padding: 20px 24px; max-width: 1400px; margin-left: auto; margin-right: auto; animation: fadeIn .3s ease; overflow-x: hidden; }
 .page-header { margin-bottom: 16px; }
 .page-title { font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; color: var(--text-1); }
 .page-subtitle { font-size: .75rem; color: var(--text-2); margin-top: 2px; }
@@ -514,4 +517,282 @@ svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; 
   .user-info { display: none; }
   .main-content { padding: 14px 12px; }
   .glass-overlay-content { width: 95%; max-height: 90vh; }
+}
+
+/* =============================================
+   EHR Expansion Styles
+   ============================================= */
+
+/* Layout & Sidebar */
+.app-layout {
+  display: flex;
+  min-height: calc(100vh - var(--topnav-height));
+  margin-top: var(--topnav-height);
+}
+.sidebar {
+  width: 220px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.sidebar-nav-menu {
+  list-style: none;
+  padding: 10px 0;
+  margin: 0;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  color: var(--text-2);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  border-left: 4px solid transparent;
+}
+.nav-item:hover {
+  background: var(--bg);
+  color: var(--primary);
+}
+.nav-item.active {
+  background: rgba(70, 15, 117, 0.08);
+  color: var(--primary);
+  border-left-color: var(--primary);
+  font-weight: 600;
+}
+.nav-item svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  flex-shrink: 0;
+}
+.main-content {
+  flex: 1;
+  padding: 20px 24px;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  animation: fadeIn .3s ease;
+  overflow-x: hidden;
+}
+
+/* Sub Panels */
+.sub-panel {
+  display: none;
+  animation: fadeIn 0.25s ease;
+}
+.sub-panel.active {
+  display: block;
+}
+
+/* Triage Board (Emergency) */
+.triage-board-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-top: 15px;
+}
+.triage-col {
+  background: rgba(26, 29, 41, 0.02);
+  border-radius: var(--radius-md);
+  padding: 12px 10px;
+  border: 1px solid var(--border);
+  min-height: 400px;
+}
+.triage-col-header {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  text-align: center;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  color: #fff;
+}
+.triage-col.red .triage-col-header { background: var(--danger); }
+.triage-col.orange .triage-col-header { background: var(--warning); }
+.triage-col.yellow .triage-col-header { background: #b45309; }
+.triage-col.green .triage-col-header { background: var(--success); }
+.triage-col.blue .triage-col-header { background: var(--info); }
+
+.triage-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.triage-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.triage-card-id {
+  font-size: 0.7rem;
+  color: var(--text-3);
+  font-weight: 600;
+}
+.triage-card-name {
+  font-weight: 600;
+  font-size: 0.8rem;
+  margin: 4px 0;
+}
+.triage-card-complaint {
+  font-size: 0.72rem;
+  color: var(--text-2);
+}
+
+/* Resuscitation Zone */
+.resus-bay {
+  border: 2px dashed var(--danger);
+  background: rgba(239, 68, 68, 0.02);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+/* ICU Bed Map */
+.icu-bed-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+.icu-bed-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  border-top: 4px solid var(--border);
+}
+.icu-bed-card.critical { border-top-color: var(--danger); background: rgba(239, 68, 68, 0.01); }
+.icu-bed-card.stable { border-top-color: var(--success); }
+.icu-bed-card.improving { border-top-color: var(--info); }
+
+.icu-vitals-spark {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.spark-val {
+  background: var(--border-light);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+.spark-val.critical { color: var(--danger); background: var(--danger-bg); }
+
+/* OT Schedule Gantt */
+.ot-gantt-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 15px;
+}
+.ot-room-row {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  overflow: hidden;
+}
+.ot-room-label {
+  width: 100px;
+  background: var(--bg);
+  padding: 14px;
+  font-weight: 700;
+  border-right: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ot-room-schedule {
+  flex: 1;
+  display: flex;
+  position: relative;
+  min-height: 60px;
+  padding: 8px;
+  gap: 10px;
+}
+.ot-schedule-block {
+  background: rgba(70, 15, 117, 0.08);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  color: var(--primary);
+}
+
+/* Blood Bank Grid */
+.blood-stock-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.blood-group-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+.blood-group-title {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--danger);
+}
+.blood-units-count {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 6px 0;
+}
+.blood-stock-low {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+}
+
+/* Sparklines */
+.sparkline-svg {
+  width: 100%;
+  height: 30px;
+  stroke: var(--primary);
+  stroke-width: 2;
+  fill: none;
+}
+
+/* Print Layout */
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+    font-size: 11pt;
+  }
+  .topnav, .sidebar, .toast-container, .modal-overlay, button, form {
+    display: none !important;
+  }
+  .main-content {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+  .glass-card {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
 }

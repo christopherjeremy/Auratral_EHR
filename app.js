@@ -31,6 +31,21 @@ const api = {
     getDevices: "devices",
     getComplaints: "complaints",
     getNotifications: "notifications",
+    getEmergencyCases: "emergencyCases",
+    getIcuAdmissions: "icuAdmissions",
+    getIcuCharting: "icuCharting",
+    getSurgeries: "surgeries",
+    getOtSchedule: "otSchedule",
+    getBloodInventory: "bloodInventory",
+    getBloodRequests: "bloodRequests",
+    getDonors: "donors",
+    getDietOrders: "dietOrders",
+    getAmbulanceTrips: "ambulanceTrips",
+    getAmbulanceFleet: "ambulanceFleet",
+    getDischargeSummaries: "dischargeSummaries",
+    getMessages: "messages",
+    getPharmacyInventory: "pharmacyInventory",
+    getLabReagents: "labReagents",
     
     // Mutations
     upsertPatient: "patients",
@@ -43,7 +58,22 @@ const api = {
     upsertBillingInvoice: "billingInvoices",
     upsertDevice: "devices",
     upsertComplaint: "complaints",
-    upsertNotification: "notifications"
+    upsertNotification: "notifications",
+    upsertEmergencyCase: "emergencyCases",
+    upsertIcuAdmission: "icuAdmissions",
+    upsertIcuCharting: "icuCharting",
+    upsertSurgery: "surgeries",
+    upsertOtSchedule: "otSchedule",
+    upsertBloodInventory: "bloodInventory",
+    upsertBloodRequest: "bloodRequests",
+    upsertDonor: "donors",
+    upsertDietOrder: "dietOrders",
+    upsertAmbulanceTrip: "ambulanceTrips",
+    upsertAmbulanceFleet: "ambulanceFleet",
+    upsertDischargeSummary: "dischargeSummaries",
+    upsertMessage: "messages",
+    upsertPharmacyInventory: "pharmacyInventory",
+    upsertLabReagent: "labReagents"
   }
 };
 
@@ -266,7 +296,22 @@ const STATE = {
   vitals: [],
   devices: [],
   complaints: [],
-  notifications: []
+  notifications: [],
+  emergencyCases: [],
+  icuAdmissions: [],
+  icuCharting: [],
+  surgeries: [],
+  otSchedule: [],
+  bloodInventory: [],
+  bloodRequests: [],
+  donors: [],
+  dietOrders: [],
+  ambulanceTrips: [],
+  ambulanceFleet: [],
+  dischargeSummaries: [],
+  messages: [],
+  pharmacyInventory: [],
+  labReagents: []
 };
 
 // Seed Databases
@@ -564,7 +609,13 @@ window.bootstrapDatabase = async function() {
       { email: "lab@atralos.com", pass: "Pass123" },
       { email: "radiologist@atralos.com", pass: "Pass123" },
       { email: "pharmacist@atralos.com", pass: "Pass123" },
-      { email: "finance@atralos.com", pass: "Pass123" }
+      { email: "finance@atralos.com", pass: "Pass123" },
+      { email: "emergency@atralos.com", pass: "Pass123" },
+      { email: "icu@atralos.com", pass: "Pass123" },
+      { email: "ot@atralos.com", pass: "Pass123" },
+      { email: "bloodbank@atralos.com", pass: "Pass123" },
+      { email: "diet@atralos.com", pass: "Pass123" },
+      { email: "transport@atralos.com", pass: "Pass123" }
     ];
     for (const authUser of defaultStaffAuths) {
       try {
@@ -574,6 +625,30 @@ window.bootstrapDatabase = async function() {
           console.warn("Could not register staff auth:", authUser.email, e);
         }
       }
+    }
+
+    // Seed staffAccounts for the new roles
+    const newStaffRecords = [
+      { id: "STF_ER_01", name: "Dr. Tarun Verma", role: "Emergency Doctor", dept: "Emergency / Trauma", email: "emergency@atralos.com" },
+      { id: "STF_ICU_01", name: "Dr. Ritu Choudhury", role: "ICU Specialist", dept: "ICU Management", email: "icu@atralos.com" },
+      { id: "STF_OT_01", name: "Dr. Sandeep Sen", role: "Chief Surgeon", dept: "Operation Theatre", email: "ot@atralos.com" },
+      { id: "STF_BB_01", name: "Dr. Alok Malhotra", role: "Blood Bank Officer", dept: "Blood Bank", email: "bloodbank@atralos.com" },
+      { id: "STF_DT_01", name: "Dr. Nidhi Joshi", role: "Dietitian", dept: "Diet & Nutrition", email: "diet@atralos.com" },
+      { id: "STF_TR_01", name: "Suresh Gowda", role: "Ambulance Driver", dept: "Ambulance & Transport", email: "transport@atralos.com" }
+    ];
+
+    for (const st of newStaffRecords) {
+      await setDoc(doc(db, "staffAccounts", st.id), {
+        ...st,
+        status: "Active",
+        shift: "Morning",
+        workDays: "Mon,Tue,Wed,Thu,Fri",
+        qualification: "MD/Diploma",
+        specialization: st.dept,
+        phone: "9876543210",
+        leaveBalance: 15,
+        joiningDate: new Date().toISOString().split('T')[0]
+      });
     }
 
     // Seed patients (PII is encrypted client-side)
@@ -616,6 +691,111 @@ window.bootstrapDatabase = async function() {
     // Seed complaints
     for (const c of SEED_COMPLAINTS) {
       await setDoc(doc(db, "complaints", c.id), c);
+    }
+
+    // Seed pharmacy inventory
+    const seedPharmacy = [
+      { id: 'DRG001', name: 'Paracetamol 650mg', stock: 2400, expiry: '2027-03-15', status: 'OK', batch: 'B101', reorderLevel: 200, category: 'General' },
+      { id: 'DRG002', name: 'Metformin 500mg', stock: 1800, expiry: '2027-06-20', status: 'OK', batch: 'B102', reorderLevel: 150, category: 'Diabetic' },
+      { id: 'DRG003', name: 'Amlodipine 5mg', stock: 950, expiry: '2027-01-10', status: 'OK', batch: 'B103', reorderLevel: 100, category: 'Cardiac' },
+      { id: 'DRG004', name: 'Amoxicillin 500mg', stock: 120, expiry: '2026-09-30', status: 'Low', batch: 'B104', reorderLevel: 200, category: 'Antibiotic' },
+      { id: 'DRG005', name: 'Omeprazole 20mg', stock: 3200, expiry: '2027-08-05', status: 'OK', batch: 'B105', reorderLevel: 300, category: 'General' },
+      { id: 'DRG006', name: 'Ceftriaxone 1g', stock: 45, expiry: '2026-07-18', status: 'Critical', batch: 'B106', reorderLevel: 50, category: 'Antibiotic' }
+    ];
+    for (const ph of seedPharmacy) {
+      await setDoc(doc(db, "pharmacyInventory", ph.id), ph);
+    }
+
+    // Seed lab reagents
+    const seedLabReagents = [
+      { id: 'REA001', name: 'Glucose Oxidase Kit', stock: 12, expiry: '2026-12-01', status: 'OK', reorderLevel: 5 },
+      { id: 'REA002', name: 'HbA1c Reagent Pack', stock: 3, expiry: '2026-10-15', status: 'Low', reorderLevel: 5 },
+      { id: 'REA003', name: 'CBC Diluent Lyse', stock: 8, expiry: '2027-03-20', status: 'OK', reorderLevel: 4 },
+      { id: 'REA004', name: 'Lipid Assay Standard', stock: 1, expiry: '2026-08-05', status: 'Critical', reorderLevel: 3 }
+    ];
+    for (const lr of seedLabReagents) {
+      await setDoc(doc(db, "labReagents", lr.id), lr);
+    }
+
+    // Seed emergency cases
+    const seedEmergency = [
+      { id: 'ER-101', patientId: 'AURA-2026-0001', triageLevel: 'Red', chiefComplaint: 'Severe chest pain, breathlessness', broughtBy: 'Ambulance (108)', timeOfArrival: new Date().toISOString(), status: 'Active', disposition: 'Resus', mlcFlag: false },
+      { id: 'ER-102', patientId: 'AURA-2026-0002', triageLevel: 'Orange', chiefComplaint: 'Suspected stroke, slurred speech', broughtBy: 'Spouse', timeOfArrival: new Date(Date.now() - 30 * 60 * 1000).toISOString(), status: 'Active', disposition: 'ER Bed', mlcFlag: false },
+      { id: 'ER-103', patientId: 'AURA-2026-0003', triageLevel: 'Yellow', chiefComplaint: 'Laceration on right leg, active bleeding', broughtBy: 'Friend', timeOfArrival: new Date(Date.now() - 60 * 60 * 1000).toISOString(), status: 'Active', disposition: 'ER Bed', mlcFlag: true, mlcDetails: { policeStation: 'Halasuru', firNumber: 'FIR-2026-928', injuryType: 'Laceration', broughtByName: 'Ramesh Singh' } }
+    ];
+    for (const ec of seedEmergency) {
+      await setDoc(doc(db, "emergencyCases", ec.id), ec);
+    }
+
+    // Seed ICU admissions
+    const seedIcu = [
+      { id: 'ICU-201', patientId: 'AURA-2026-0001', bedNumber: 'ICU-Bed 1', diagnosis: 'Acute Coronary Syndrome', ventilatorStatus: true, isolationFlag: false, acuityLevel: 'Critical', nurseId: 'STF003', apacheScore: 24, sofaScore: 8, ewsScore: 6 },
+      { id: 'ICU-202', patientId: 'AURA-2026-0002', bedNumber: 'ICU-Bed 3', diagnosis: 'Ischemic Stroke', ventilatorStatus: false, isolationFlag: false, acuityLevel: 'Stable', nurseId: 'STF003', apacheScore: 12, sofaScore: 4, ewsScore: 2 },
+      { id: 'ICU-203', patientId: 'AURA-2026-0003', bedNumber: 'ICU-Bed 5', diagnosis: 'Polytrauma (Post-Op)', ventilatorStatus: true, isolationFlag: true, acuityLevel: 'Critical', nurseId: 'STF003', apacheScore: 28, sofaScore: 10, ewsScore: 7 }
+    ];
+    for (const ic of seedIcu) {
+      await setDoc(doc(db, "icuAdmissions", ic.id), ic);
+    }
+
+    // Seed surgeries
+    const seedSurgeries = [
+      { id: 'SURG-301', patientId: 'AURA-2026-0001', procedureName: 'Coronary Artery Bypass Graft (CABG)', surgeonId: 'DOC001', anesthetistId: 'DOC002', roomNumber: 'OT-1', scheduledDate: new Date().toISOString().split('T')[0], scheduledTime: '08:00', status: 'In-Progress' },
+      { id: 'SURG-302', patientId: 'AURA-2026-0003', procedureName: 'Open Reduction Internal Fixation (ORIF)', surgeonId: 'DOC003', anesthetistId: 'DOC002', roomNumber: 'OT-2', scheduledDate: new Date(Date.now() + 24*3600*1000).toISOString().split('T')[0], scheduledTime: '10:30', status: 'Scheduled' }
+    ];
+    for (const sg of seedSurgeries) {
+      await setDoc(doc(db, "surgeries", sg.id), sg);
+    }
+
+    // Seed blood stock
+    const seedBlood = [
+      { id: 'BLD-A-POS', bloodGroup: 'A+', component: 'Whole Blood', units: 14, expiry: '2026-07-20' },
+      { id: 'BLD-A-NEG', bloodGroup: 'A-', component: 'PRBC', units: 4, expiry: '2026-07-15' },
+      { id: 'BLD-B-POS', bloodGroup: 'B+', component: 'FFP', units: 18, expiry: '2026-08-12' },
+      { id: 'BLD-B-NEG', bloodGroup: 'B-', component: 'Platelets', units: 3, expiry: '2026-07-02' },
+      { id: 'BLD-AB-POS', bloodGroup: 'AB+', component: 'Whole Blood', units: 8, expiry: '2026-07-28' },
+      { id: 'BLD-AB-NEG', bloodGroup: 'AB-', component: 'PRBC', units: 1, expiry: '2026-07-09' },
+      { id: 'BLD-O-POS', bloodGroup: 'O+', component: 'Platelets', units: 25, expiry: '2026-07-05' },
+      { id: 'BLD-O-NEG', bloodGroup: 'O-', component: 'PRBC', units: 6, expiry: '2026-07-18' }
+    ];
+    for (const bl of seedBlood) {
+      await setDoc(doc(db, "bloodInventory", bl.id), bl);
+    }
+
+    // Seed ambulance fleet
+    const seedAmbulanceFleet = [
+      { id: 'AMB-01', vehicleNum: 'KA-03-GA-1102', type: 'Advanced Life Support (ALS)', status: 'Available', insuranceExpiry: '2027-05-10', lastServiceDate: '2026-04-12' },
+      { id: 'AMB-02', vehicleNum: 'KA-03-GA-1103', type: 'Basic Life Support (BLS)', status: 'Dispatched', insuranceExpiry: '2027-06-22', lastServiceDate: '2026-05-15' },
+      { id: 'AMB-03', vehicleNum: 'KA-03-GA-1104', type: 'ALS', status: 'On-Scene', insuranceExpiry: '2027-01-18', lastServiceDate: '2026-03-20' },
+      { id: 'AMB-04', vehicleNum: 'KA-03-GA-1105', type: 'BLS', status: 'Available', insuranceExpiry: '2027-03-15', lastServiceDate: '2026-05-01' },
+      { id: 'AMB-05', vehicleNum: 'KA-03-GA-1106', type: 'Patient Transport', status: 'Out of Service', insuranceExpiry: '2026-12-05', lastServiceDate: '2026-06-10' }
+    ];
+    for (const am of seedAmbulanceFleet) {
+      await setDoc(doc(db, "ambulanceFleet", am.id), am);
+    }
+
+    // Seed ambulance trips
+    const seedAmbulanceTrips = [
+      { id: 'TRP-801', vehicleId: 'AMB-02', callerName: 'Asha Hegde', pickupLocation: 'MG Road Metro Station', chiefComplaint: 'Suspected trauma after fall', urgency: 'High', status: 'Dispatched', timestamps: { callReceived: new Date(Date.now() - 18 * 60 * 1000).toISOString() } }
+    ];
+    for (const tr of seedAmbulanceTrips) {
+      await setDoc(doc(db, "ambulanceTrips", tr.id), tr);
+    }
+
+    // Seed diet orders
+    const seedDietOrders = [
+      { id: 'DIET-501', patientId: 'AURA-2026-0001', dietType: 'Cardiac / Low Sodium', preference: 'Veg', allergens: ['Nuts'], breakfast: 'Prepared', lunch: 'Pending', dinner: 'Pending' },
+      { id: 'DIET-502', patientId: 'AURA-2026-0002', dietType: 'Regular', preference: 'Non-Veg', allergens: [], breakfast: 'Consumed', lunch: 'Consumed', dinner: 'Pending' }
+    ];
+    for (const dt of seedDietOrders) {
+      await setDoc(doc(db, "dietOrders", dt.id), dt);
+    }
+
+    // Seed blood requests
+    const seedBloodRequests = [
+      { id: 'REQ-901', patientId: 'AURA-2026-0001', bloodGroup: 'A+', units: 2, status: 'Pending' }
+    ];
+    for (const br of seedBloodRequests) {
+      await setDoc(doc(db, "bloodRequests", br.id), br);
     }
 
     // Seed initial audit log
@@ -720,6 +900,67 @@ function loadFromStorage() {
     renderActivePanel();
   });
 
+  convex.onUpdate(api.db.getEmergencyCases, {}, (data) => {
+    STATE.emergencyCases = data || [];
+    renderActivePanel();
+  });
+  convex.onUpdate(api.db.getIcuAdmissions, {}, (data) => {
+    STATE.icuAdmissions = data || [];
+    renderActivePanel();
+  });
+  convex.onUpdate(api.db.getIcuCharting, {}, (data) => {
+    STATE.icuCharting = data || [];
+    renderActivePanel();
+  });
+  convex.onUpdate(api.db.getSurgeries, {}, (data) => {
+    STATE.surgeries = data || [];
+    renderActivePanel();
+  });
+  convex.onUpdate(api.db.getOtSchedule, {}, (data) => {
+    STATE.otSchedule = data || [];
+    renderActivePanel();
+  });
+  convex.onUpdate(api.db.getBloodInventory, {}, (data) => {
+    STATE.bloodInventory = data || [];
+    renderActivePanel();
+  });
+  convex.onUpdate(api.db.getBloodRequests, {}, (data) => {
+    STATE.bloodRequests = data || [];
+    renderActivePanel();
+  });
+  convex.onUpdate(api.db.getDonors, {}, (data) => {
+    STATE.donors = data || [];
+    renderActivePanel();
+  });
+  convex.onUpdate(api.db.getDietOrders, {}, (data) => {
+    STATE.dietOrders = data || [];
+    renderActivePanel();
+  });
+  convex.onUpdate(api.db.getAmbulanceTrips, {}, (data) => {
+    STATE.ambulanceTrips = data || [];
+    renderActivePanel();
+  });
+  convex.onUpdate(api.db.getAmbulanceFleet, {}, (data) => {
+    STATE.ambulanceFleet = data || [];
+    renderActivePanel();
+  });
+  convex.onUpdate(api.db.getDischargeSummaries, {}, (data) => {
+    STATE.dischargeSummaries = data || [];
+    renderActivePanel();
+  });
+  convex.onUpdate(api.db.getMessages, {}, (data) => {
+    STATE.messages = data || [];
+    renderActivePanel();
+  });
+  convex.onUpdate(api.db.getPharmacyInventory, {}, (data) => {
+    STATE.pharmacyInventory = data || [];
+    renderActivePanel();
+  });
+  convex.onUpdate(api.db.getLabReagents, {}, (data) => {
+    STATE.labReagents = data || [];
+    renderActivePanel();
+  });
+
   convex.onUpdate(api.db.getNotifications, {}, (data) => {
     STATE.notifications = data || [];
     updateNotificationBell();
@@ -748,29 +989,94 @@ function showToast(message, type = 'success') {
 const ROLE_NAV_CONFIGS = {
   admin: [
     { title: 'Super Admin Hub', id: 'admin-dashboard', icon: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5' },
-    { title: 'System Settings', id: 'admin-settings', icon: 'M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z', action: 'toggle-settings' }
+    { title: 'System Settings', id: 'admin-settings', icon: 'M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z' }
   ],
   reception: [
     { title: 'Register Patient', id: 'reception-register', icon: 'M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M20 8v6M23 11h-6' },
-    { title: 'Book Appointments', id: 'reception-appointments', icon: 'M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM16 2v4M8 2v4M3 10h18' }
+    { title: 'Appointments Calendar', id: 'reception-calendar', icon: 'M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM16 2v4M8 2v4M3 10h18' },
+    { title: 'Queue Monitor', id: 'reception-queue-monitor', icon: 'M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z M12 6V12L16 14' }
   ],
   nursing: [
-    { title: 'Checked-in Vitals', id: 'nursing-vitals', icon: 'M22 12h-4l-3 9L9 3l-3 9H2' }
+    { title: 'Patient Queue', id: 'nursing-queue', icon: 'M22 12h-4l-3 9L9 3l-3 9H2' },
+    { title: 'MAR', id: 'nursing-mar', icon: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5' },
+    { title: 'I/O Charts', id: 'nursing-io', icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' },
+    { title: 'Care Plans', id: 'nursing-careplans', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8' },
+    { title: 'Shift Handover', id: 'nursing-handover', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' },
+    { title: 'Bed Management', id: 'nursing-bedmgmt', icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' }
   ],
   doctor: [
-    { title: 'Clinic Queue', id: 'doctor-queue', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8' }
+    { title: 'OPD Queue', id: 'doctor-queue', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8' },
+    { title: 'IPD Rounds', id: 'doctor-ipd', icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' },
+    { title: 'Discharge Summary', id: 'doctor-discharge', icon: 'M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33' },
+    { title: 'Templates', id: 'doctor-templates', icon: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2' }
   ],
   lab: [
-    { title: 'Lab Investigations', id: 'lab-investigations', icon: 'M18.36 2.24a9 9 0 0 1 0 12.72m-2.82-9.9a6 6 0 0 1 0 8.49M12 9A3 3 0 1 1 12 3a3 3 0 0 1 0 6z' }
+    { title: 'Pending Tests', id: 'lab-pending', icon: 'M18.36 2.24a9 9 0 0 1 0 12.72m-2.82-9.9a6 6 0 0 1 0 8.49M12 9A3 3 0 1 1 12 3a3 3 0 0 1 0 6z' },
+    { title: 'Completed Reports', id: 'lab-completed', icon: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2' },
+    { title: 'Sample Tracker', id: 'lab-tracker', icon: 'M12 22C17.5228 22 22 17.5228 22 12' },
+    { title: 'QC Dashboard', id: 'lab-qc', icon: 'M19.4 15a1.65' },
+    { title: 'Reagent Stock', id: 'lab-reagents', icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' }
   ],
   radiology: [
-    { title: 'Radiology Studies', id: 'radiology-imaging', icon: 'M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1M12 7v10M8 12h8' }
+    { title: 'Imaging Queue', id: 'radiology-queue', icon: 'M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1M12 7v10M8 12h8' },
+    { title: 'Completed Studies', id: 'radiology-completed', icon: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2' },
+    { title: 'Schedule Scans', id: 'radiology-schedule', icon: 'M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6' },
+    { title: 'TAT Metrics', id: 'radiology-tat', icon: 'M12 22C17.5228 22 22 17.5228 22 12' }
   ],
   pharmacy: [
-    { title: 'Prescription Fulfill', id: 'pharmacy-fulfill', icon: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5' }
+    { title: 'Dispense Queue', id: 'pharmacy-queue', icon: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5' },
+    { title: 'Drug Inventory', id: 'pharmacy-inventory', icon: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7' },
+    { title: 'Expiry Management', id: 'pharmacy-expiry', icon: 'M12 22C17.5228 22 22 17.5228 22 12' },
+    { title: 'Purchase Orders', id: 'pharmacy-po', icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' }
   ],
   finance: [
-    { title: 'Invoice & TPA claims', id: 'finance-claims', icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' }
+    { title: 'Pending Bills', id: 'finance-pending', icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' },
+    { title: 'Paid History', id: 'finance-paid', icon: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2' },
+    { title: 'Daily Collection', id: 'finance-daily', icon: 'M12 22C17.5228 22 22 17.5228 22 12' },
+    { title: 'Revenue Analytics', id: 'finance-analytics', icon: 'M19.4 15a1.65' },
+    { title: 'Outstanding Dues', id: 'finance-outstanding', icon: 'M12 1v22' }
+  ],
+  emergency: [
+    { title: 'Triage Board', id: 'emergency-triage', icon: 'M12 22C17.5228 22 22 17.5228 22 12' },
+    { title: 'Quick Registration', id: 'emergency-quickreg', icon: 'M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' },
+    { title: 'Resuscitation Zone', id: 'emergency-resus', icon: 'M22 12h-4l-3 9L9 3l-3 9H2' },
+    { title: 'ER Bed Status', id: 'emergency-beds', icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' },
+    { title: 'MLC Register', id: 'emergency-mlc', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' },
+    { title: 'Shift Handover', id: 'emergency-handover', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' }
+  ],
+  icu: [
+    { title: 'ICU Overview', id: 'icu-overview', icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' },
+    { title: 'Patient Monitor', id: 'icu-monitor', icon: 'M22 12h-4l-3 9L9 3l-3 9H2' },
+    { title: 'Daily Rounds', id: 'icu-rounds', icon: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7' },
+    { title: 'Procedure Log', id: 'icu-procedures', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8' },
+    { title: 'Scoring & Alerts', id: 'icu-alerts', icon: 'M19.4 15a1.65' }
+  ],
+  ot: [
+    { title: 'OT Schedule', id: 'ot-schedule', icon: 'M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6' },
+    { title: 'Book Surgery', id: 'ot-booking', icon: 'M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M20 8v6' },
+    { title: 'Pre-Op Checklist', id: 'ot-checklist', icon: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7' },
+    { title: 'Operative Notes', id: 'ot-intra', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8' },
+    { title: 'Post-Op Recovery', id: 'ot-recovery', icon: 'M22 12h-4l-3 9L9 3l-3 9H2' },
+    { title: 'OT Analytics', id: 'ot-analytics', icon: 'M19.4 15a1.65' }
+  ],
+  bloodbank: [
+    { title: 'Blood Stock', id: 'bloodbank-stock', icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' },
+    { title: 'Donor Register', id: 'bloodbank-donor', icon: 'M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' },
+    { title: 'Donation Record', id: 'bloodbank-donation', icon: 'M14 2H6a2 2 0 0 0-2 2v16' },
+    { title: 'Cross-Match', id: 'bloodbank-crossmatch', icon: 'M12 22C17.5228 22 22 17.5228 22 12' },
+    { title: 'Issue / Return', id: 'bloodbank-issue', icon: 'M12 1v22' }
+  ],
+  diet: [
+    { title: 'Kitchen Summary', id: 'diet-kitchen', icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' },
+    { title: 'Diet Orders', id: 'diet-orders', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8' },
+    { title: 'Nutrition Screening', id: 'diet-screening', icon: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7' },
+    { title: 'Meal Tracker', id: 'diet-tracker', icon: 'M22 12h-4l-3 9L9 3l-3 9H2' }
+  ],
+  transport: [
+    { title: 'Dispatch', id: 'transport-dispatch', icon: 'M22 12h-4l-3 9L9 3l-3 9H2' },
+    { title: 'Fleet Status', id: 'transport-fleet', icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' },
+    { title: 'Trip Log', id: 'transport-trips', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8' },
+    { title: 'Vehicle Management', id: 'transport-vehicles', icon: 'M19.4 15a1.65' }
   ],
   patient: [
     { title: 'Portal Simulator', id: 'patient-mobile', icon: 'M17 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM12 18h.01' }
@@ -848,86 +1154,366 @@ function renderSidebarNav() {
 }
 
 function navigateToPanel(panelId) {
-
   STATE.activePanel = panelId;
   
-  // Hide all panels
+  // Hide all outer role panels
   document.querySelectorAll('.role-panel').forEach(panel => {
     panel.style.display = 'none';
   });
   
-  // Render titles and layout updates based on panel selection
+  // Hide settings page
+  const settingsPage = document.getElementById('page-system-settings');
+  if (settingsPage) settingsPage.style.display = 'none';
+  
+  // Find outer role panel for current activeRole
+  let targetRolePanelId = `role-panel-${STATE.activeRole}`;
+  if (STATE.activeRole === 'radiology') targetRolePanelId = 'role-panel-radiology';
+  if (STATE.activeRole === 'pharmacy') targetRolePanelId = 'role-panel-pharmacy';
+  if (STATE.activeRole === 'finance') targetRolePanelId = 'role-panel-finance';
+  
+  const outerPanel = document.getElementById(targetRolePanelId);
+  if (outerPanel) {
+    outerPanel.style.display = 'block';
+    
+    // Hide all sub-panels inside this outer panel
+    outerPanel.querySelectorAll('.sub-panel').forEach(sub => {
+      sub.style.display = 'none';
+    });
+    
+    // Show active sub-panel
+    const activeSub = document.getElementById(panelId);
+    if (activeSub) {
+      activeSub.style.display = 'block';
+    }
+  } else if (panelId === 'admin-settings') {
+    // Edge case for admin settings page
+    if (settingsPage) settingsPage.style.display = 'block';
+  }
+  
+  // Update sidebar active classes
+  document.querySelectorAll('.nav-item').forEach(el => {
+    if (el.dataset.panel === panelId) {
+      el.classList.add('active');
+    } else {
+      el.classList.remove('active');
+    }
+  });
+
   const title = document.getElementById('current-panel-title');
   const subtitle = document.getElementById('current-panel-subtitle');
   
-  if (STATE.activeRole === 'admin') {
-    document.getElementById('role-panel-admin').style.display = 'block';
-    title.textContent = 'Super Admin Hub';
-    subtitle.textContent = 'Manage staff registry, view DPDP compliance audits, and download data pools.';
-  } else if (STATE.activeRole === 'reception') {
-    document.getElementById('role-panel-reception').style.display = 'block';
-    title.textContent = 'Receptionist Dashboard';
-    subtitle.textContent = 'Onboard patient profiles, query and verify ABHA IDs, and issue appointment tokens.';
-  } else if (STATE.activeRole === 'nursing') {
-    document.getElementById('role-panel-nursing').style.display = 'block';
-    title.textContent = 'Inpatient Nursing Station';
-    subtitle.textContent = 'Query checking queue, capture vital signs, and update care schedules.';
-  } else if (STATE.activeRole === 'doctor') {
-    document.getElementById('role-panel-doctor').style.display = 'block';
-    title.textContent = 'Clinical Consult Center';
-    subtitle.textContent = 'View patient records history, construct SOAP notes, search ICD-10, and e-sign orders.';
-  } else if (STATE.activeRole === 'lab') {
-    document.getElementById('role-panel-lab').style.display = 'block';
-    title.textContent = 'Pathology Laboratory Portal';
-    subtitle.textContent = 'Retrieve active test orders, record observed value details, and compile lab reports.';
-  } else if (STATE.activeRole === 'radiology') {
-    document.getElementById('role-panel-radiology').style.display = 'block';
-    title.textContent = 'Radiology Diagnostics';
-    subtitle.textContent = 'Examine requested scans, upload DICOM study images, and complete diagnostic findings.';
-  } else if (STATE.activeRole === 'pharmacy') {
-    document.getElementById('role-panel-pharmacy').style.display = 'block';
-    title.textContent = 'Hospital Pharmacy Dispenser';
-    subtitle.textContent = 'Review e-prescriptions, dispatch medicines, record generic substitutes, and log inventory.';
-  } else if (STATE.activeRole === 'finance') {
-    document.getElementById('role-panel-finance').style.display = 'block';
-    title.textContent = 'Billing & Insurance Desk';
-    subtitle.textContent = 'Review cross-department services, handle TPA pre-authorization claims, and issue GST receipts.';
-  } else if (STATE.activeRole === 'patient') {
-    document.getElementById('role-panel-patient').style.display = 'block';
-    title.textContent = 'Patient Self-Service PWA';
-    subtitle.textContent = 'Simulating mobile patient portal via registered phone number OTP verification.';
-  }
+  const panelTitles = {
+    // Reception
+    'reception-register': { title: 'Patient Onboarding', sub: 'Register new patient profiles and check ABDM/ABHA linking.' },
+    'reception-calendar': { title: 'Appointments Calendar', sub: 'Manage physician slot scheduling and bookings.' },
+    'reception-queue-monitor': { title: 'OPD Queue Monitor', sub: 'Real-time department wait list and token tracking.' },
+    // Nursing
+    'nursing-queue': { title: 'Nursing Vitals Station', sub: 'Record patient vitals and check allergy alerts.' },
+    'nursing-mar': { title: 'Medication Administration Record (MAR)', sub: 'Track and sign-off patient medication schedules.' },
+    'nursing-io': { title: 'Intake / Output Charts', sub: 'Log patient fluid intake, output, and running balance.' },
+    'nursing-careplans': { title: 'Nursing Care Plans', sub: 'Assess patient problems, goals, and care interventions.' },
+    'nursing-handover': { title: 'Shift Handover (ISBAR)', sub: 'Provide structured clinical handovers for shift change.' },
+    'nursing-bedmgmt': { title: 'Bed Management Board', sub: 'Manage ward bed allocations and patient transfers.' },
+    // Doctor
+    'doctor-queue': { title: 'Clinical Consult Center', sub: 'Perform patient consultations, write SOAP notes, search ICD-10.' },
+    'doctor-ipd': { title: 'Inpatient Rounding Checklist', sub: 'Perform daily IPD rounds and log rounding progress.' },
+    'doctor-discharge': { title: 'Discharge Summary Builder', sub: 'Compile medical summary, prescriptions, and release details.' },
+    'doctor-templates': { title: 'SOAP Consultation Templates', sub: 'Manage favorite clinical consult templates.' },
+    // Lab
+    'lab-pending': { title: 'Lab Investigation Queue', sub: 'Enter observed laboratory values for pending test orders.' },
+    'lab-completed': { title: 'Finalized Pathology Reports', sub: 'View completed lab reports and historical values.' },
+    'lab-tracker': { title: 'Sample Collection Tracker', sub: 'Track accession codes and processing pipeline status.' },
+    'lab-qc': { title: 'Quality Control Dashboard', sub: 'Verify laboratory testing accuracy and Turnaround Time (TAT).' },
+    'lab-reagents': { title: 'Reagent Stock Management', sub: 'Track reagent quantities, expiry dates, and reorder levels.' },
+    // Radiology
+    'radiology-queue': { title: 'Radiology Studies Queue', sub: 'Upload imaging scans and report diagnostic observations.' },
+    'radiology-completed': { title: 'Completed Imaging Archive', sub: 'Search completed imaging reports and issue amendments.' },
+    'radiology-schedule': { title: 'Modality Booking Scheduler', sub: 'Reserve time slots for CT, MRI, X-Ray, and Ultrasound.' },
+    'radiology-tat': { title: 'Radiology Performance TAT', sub: 'Monitor average Turnaround Time by scanning modality.' },
+    // Pharmacy
+    'pharmacy-queue': { title: 'Dispense Queue', sub: 'Review prescriptions, complete drug dispensing, check interactions.' },
+    'pharmacy-inventory': { title: 'Pharmacy Inventory', sub: 'Manage live stock levels, batch details, and purchase records.' },
+    'pharmacy-expiry': { title: 'Drug Expiry Management', sub: 'Track drugs near expiry (30/60/90 days).' },
+    'pharmacy-po': { title: 'Purchase Order Generator', sub: 'Create new stock reorders for suppliers.' },
+    // Finance
+    'finance-pending': { title: 'Pending Billing Ledger', sub: 'Review services consumed, verify pre-auth, collect payment.' },
+    'finance-paid': { title: 'Paid Invoices History', sub: 'Search settled transactions and print copy receipts.' },
+    'finance-daily': { title: 'Daily Cash Collection', sub: 'Summarize collected payments by cash, UPI, card, and TPA.' },
+    'finance-analytics': { title: 'Revenue & Analytics', sub: 'Analyze department-wise collections and billing trends.' },
+    'finance-outstanding': { title: 'Outstanding Dues Aging', sub: 'Track unpaid balances and insurance pre-auth receivables.' },
+    // Emergency
+    'emergency-triage': { title: 'Emergency Triage Board', sub: 'Real-time Manchester Triage queue color-coded by clinical urgency.' },
+    'emergency-quickreg': { title: 'ER Quick Registration', sub: 'Rapidly onboard critical cases with minimal details.' },
+    'emergency-resus': { title: 'Resuscitation Zone Monitor', sub: 'Monitor immediate resus (P1) cases, drips, and team logs.' },
+    'emergency-beds': { title: 'ER Bed Occupancy', sub: 'Track trauma room beds and clinical assignments.' },
+    'emergency-mlc': { title: 'Medico-Legal Cases (MLC)', sub: 'Log police information, FIR numbers, and bodily injury tags.' },
+    'emergency-handover': { title: 'ER Shift Handover', sub: 'Active trauma handovers and pending diagnostics.' },
+    // ICU
+    'icu-overview': { title: 'ICU Bed Map Layout', sub: 'Grid of critical care beds, ventilator status, nurse assignments.' },
+    'icu-monitor': { title: 'Patient Vitals Monitor', sub: 'Real-time vitals trends, ventilator parameters, infusion pumps.' },
+    'icu-rounds': { title: 'Daily Round Checklist', sub: 'Verify daily checklist (FAST HUG) and clinical scores (SOFA/APACHE).' },
+    'icu-procedures': { title: 'Critical Care Procedures Log', sub: 'Record central line, intubation, arterial line insertions.' },
+    'icu-alerts': { title: 'Clinical Alerts & Warning Scores', sub: 'Early warning system logs and physiological deterioration triggers.' },
+    // OT
+    'ot-schedule': { title: 'OT Schedule Board', sub: 'Weekly schedule of OT Rooms and scheduled procedures.' },
+    'ot-booking': { title: 'OT Procedure Booking', sub: 'Schedule surgeries, assign surgeon, scrub nurse, anesthesiologist.' },
+    'ot-checklist': { title: 'WHO Surgical Checklist', sub: 'Perform digital Sign In, Time Out, Sign Out safety protocols.' },
+    'ot-pac': { title: 'Pre-Anesthesia Checkup (PAC)', sub: 'Complete physical airway checks, ASA scoring, and history.' },
+    'ot-intra': { title: 'Intra-Operative Record', sub: 'Log periodic vitals, anesthetics administered, fluid balance.' },
+    'ot-recovery': { title: 'Post-Op Recovery (Aldrete)', sub: 'Track Aldrete recovery scores and plan patient transfers.' },
+    'ot-analytics': { title: 'OT Utilization Performance', sub: 'View surgery volumes, room occupancy, and case cancellations.' },
+    // Blood Bank
+    'bloodbank-stock': { title: 'Blood Inventory Stock', sub: 'View component stock volumes by ABO/Rh blood groups.' },
+    'bloodbank-donor': { title: 'Blood Donor Registry', sub: 'Register donors and document medical pre-screening checks.' },
+    'bloodbank-donation': { title: 'Donation Record Log', sub: 'Record blood bag identifiers, collection times, and separation.' },
+    'bloodbank-crossmatch': { title: 'Cross-Match Ledger', sub: 'Verify donor compatibilities for pending transfusions.' },
+    'bloodbank-issue': { title: 'Transfusion Reactions & Issues', sub: 'Track issued components and document reaction profiles.' },
+    // Diet
+    'diet-kitchen': { title: 'Dietary Kitchen Summary', sub: 'Ward-wise meal count preparation checklist.' },
+    'diet-orders': { title: 'Diet Order Entry', sub: 'Assign patient dietary types, allergy locks, and feeding codes.' },
+    'diet-screening': { title: 'Nutritional Risk Screening', sub: 'Run NRS-2002 clinical scoring for malnourished patients.' },
+    'diet-tracker': { title: 'Meal Delivery Tracking', sub: 'Log breakfast, lunch, and dinner distribution status.' },
+    // Ambulance
+    'transport-dispatch': { title: 'Ambulance Dispatch Desk', sub: 'Process emergency calls and assign fleet vehicles.' },
+    'transport-fleet': { title: 'Vehicle Fleet Status', sub: 'Monitor ALS, BLS, and transport van readiness.' },
+    'transport-trips': { title: 'Ambulance Trip Logs', sub: 'Review pre-hospital care logs, times, and paramedic inputs.' },
+    'transport-vehicles': { title: 'Maintenance Registry', sub: 'Track vehicle registration, fitness certificate, and service history.' },
+    // Patient Portal
+    'patient-mobile': { title: 'Patient Self-Service PWA', sub: 'Simulating mobile portal via registered phone number.' }
+  };
+  
+  const info = panelTitles[panelId] || { title: 'Dashboard', sub: 'Overview' };
+  title.textContent = info.title;
+  subtitle.textContent = info.sub;
 }
 
-// Load data into active department dashboard
 function loadDashboardData() {
-  if (STATE.activeRole === 'admin') {
-    renderAdminStaff();
-    renderAuditLogs();
-    document.getElementById('admin-stat-staff').textContent = STAFF_ACCOUNTS.length;
-    const patientsEl = document.getElementById('admin-stat-patients');
-    if (patientsEl) patientsEl.textContent = STATE.patients.length;
-    const hasAbha = STATE.patients.filter(p => p.abhaId).length;
-    const rate = STATE.patients.length ? Math.round((hasAbha / STATE.patients.length) * 100) : 0;
-    document.getElementById('admin-stat-abha').textContent = `${rate}%`;
-  } else if (STATE.activeRole === 'reception') {
-    populateDoctorsSelect();
-    renderReceptionQueue();
-  } else if (STATE.activeRole === 'nursing') {
-    renderNursingQueue();
-  } else if (STATE.activeRole === 'doctor') {
-    renderDoctorQueue();
-    initDoctorICD10Autocomplete();
-  } else if (STATE.activeRole === 'lab') {
-    renderLabQueue();
-  } else if (STATE.activeRole === 'radiology') {
-    renderRadiologyQueue();
-  } else if (STATE.activeRole === 'pharmacy') {
-    renderPharmacyQueue();
-  } else if (STATE.activeRole === 'finance') {
-    renderFinanceQueue();
-  } else if (STATE.activeRole === 'patient') {
-    renderPatientPortalPWA();
+  // Render active sidebar items
+  renderSidebarNav();
+  
+  // Dynamic sub-panel router
+  switch (STATE.activePanel) {
+    // Reception
+    case 'reception-register':
+      populateDoctorsSelect();
+      break;
+    case 'reception-calendar':
+      renderAppointmentsCalendar();
+      break;
+    case 'reception-queue-monitor':
+      renderReceptionQueue();
+      break;
+
+    // Nursing
+    case 'nursing-queue':
+      renderNursingQueue();
+      break;
+    case 'nursing-mar':
+      renderNursingMAR();
+      break;
+    case 'nursing-io':
+      renderNursingIO();
+      break;
+    case 'nursing-careplans':
+      renderNursingCarePlans();
+      break;
+    case 'nursing-handover':
+      renderNursingHandover();
+      break;
+    case 'nursing-bedmgmt':
+      renderNursingBedMgmt();
+      break;
+
+    // Doctor
+    case 'doctor-queue':
+      renderDoctorQueue();
+      initDoctorICD10Autocomplete();
+      break;
+    case 'doctor-ipd':
+      renderDoctorIPD();
+      break;
+    case 'doctor-discharge':
+      renderDoctorDischarge();
+      break;
+    case 'doctor-templates':
+      renderDoctorTemplates();
+      break;
+
+    // Lab
+    case 'lab-pending':
+      renderLabQueue();
+      break;
+    case 'lab-completed':
+      renderLabCompleted();
+      break;
+    case 'lab-tracker':
+      renderLabTracker();
+      break;
+    case 'lab-qc':
+      renderLabQC();
+      break;
+    case 'lab-reagents':
+      renderLabReagents();
+      break;
+
+    // Radiology
+    case 'radiology-queue':
+      renderRadiologyQueue();
+      break;
+    case 'radiology-completed':
+      renderRadiologyCompleted();
+      break;
+    case 'radiology-schedule':
+      renderRadiologySchedule();
+      break;
+    case 'radiology-tat':
+      renderRadiologyTAT();
+      break;
+
+    // Pharmacy
+    case 'pharmacy-queue':
+      renderPharmacyQueue();
+      break;
+    case 'pharmacy-inventory':
+      renderPharmacyInventory();
+      break;
+    case 'pharmacy-expiry':
+      renderPharmacyExpiry();
+      break;
+    case 'pharmacy-po':
+      renderPharmacyPO();
+      break;
+
+    // Finance
+    case 'finance-pending':
+      renderFinanceQueue();
+      break;
+    case 'finance-paid':
+      renderFinancePaid();
+      break;
+    case 'finance-daily':
+      renderFinanceDaily();
+      break;
+    case 'finance-analytics':
+      renderFinanceAnalytics();
+      break;
+    case 'finance-outstanding':
+      renderFinanceOutstanding();
+      break;
+
+    // Emergency
+    case 'emergency-triage':
+      renderEmergencyTriage();
+      break;
+    case 'emergency-resus':
+      renderEmergencyResus();
+      break;
+    case 'emergency-beds':
+      renderEmergencyBeds();
+      break;
+    case 'emergency-mlc':
+      renderEmergencyMLC();
+      break;
+    case 'emergency-handover':
+      renderEmergencyHandover();
+      break;
+
+    // ICU
+    case 'icu-overview':
+      renderIcuOverview();
+      break;
+    case 'icu-monitor':
+      renderIcuMonitor();
+      break;
+    case 'icu-rounds':
+      renderIcuRounds();
+      break;
+    case 'icu-procedures':
+      renderIcuProcedures();
+      break;
+    case 'icu-alerts':
+      renderIcuAlerts();
+      break;
+
+    // OT
+    case 'ot-schedule':
+      renderOtSchedule();
+      break;
+    case 'ot-booking':
+      renderOtBooking();
+      break;
+    case 'ot-checklist':
+      renderOtChecklist();
+      break;
+    case 'ot-pac':
+      renderOtPac();
+      break;
+    case 'ot-intra':
+      renderOtIntra();
+      break;
+    case 'ot-recovery':
+      renderOtRecovery();
+      break;
+    case 'ot-analytics':
+      renderOtAnalytics();
+      break;
+
+    // Blood Bank
+    case 'bloodbank-stock':
+      renderBloodStock();
+      break;
+    case 'bloodbank-donor':
+      renderBloodDonor();
+      break;
+    case 'bloodbank-donation':
+      renderBloodDonation();
+      break;
+    case 'bloodbank-crossmatch':
+      renderBloodCrossMatch();
+      break;
+    case 'bloodbank-issue':
+      renderBloodIssue();
+      break;
+
+    // Diet
+    case 'diet-kitchen':
+      renderDietKitchen();
+      break;
+    case 'diet-orders':
+      renderDietOrders();
+      break;
+    case 'diet-screening':
+      renderDietScreening();
+      break;
+    case 'diet-tracker':
+      renderDietTracker();
+      break;
+
+    // Ambulance
+    case 'transport-dispatch':
+      renderTransportDispatch();
+      break;
+    case 'transport-fleet':
+      renderTransportFleet();
+      break;
+    case 'transport-trips':
+      renderTransportTrips();
+      break;
+    case 'transport-vehicles':
+      renderTransportVehicles();
+      break;
+
+    // Patient
+    case 'patient-mobile':
+      renderPatientPortalPWA();
+      break;
+
+    // Admin
+    case 'admin-dashboard':
+      renderAdminStaff();
+      renderAuditLogs();
+      renderAdminDashboardStats();
+      break;
   }
 }
 
@@ -4319,6 +4905,18 @@ window.addEventListener('DOMContentLoaded', async () => {
             STATE.activeRole = "pharmacy";
           } else if (targetRole.includes("finance") || targetRole.includes("bill")) {
             STATE.activeRole = "finance";
+          } else if (targetRole.includes("emergency") || targetRole.includes("er")) {
+            STATE.activeRole = "emergency";
+          } else if (targetRole.includes("icu")) {
+            STATE.activeRole = "icu";
+          } else if (targetRole.includes("ot") || targetRole.includes("surgery") || targetRole.includes("surgeon")) {
+            STATE.activeRole = "ot";
+          } else if (targetRole.includes("bloodbank") || targetRole.includes("blood")) {
+            STATE.activeRole = "bloodbank";
+          } else if (targetRole.includes("diet") || targetRole.includes("nutrition")) {
+            STATE.activeRole = "diet";
+          } else if (targetRole.includes("transport") || targetRole.includes("ambulance")) {
+            STATE.activeRole = "transport";
           } else {
             STATE.activeRole = "patient";
           }
@@ -4364,7 +4962,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       // Hide login, show main workspace
       document.getElementById('login-overlay').style.display = 'none';
       document.getElementById('topnav').style.display = 'flex';
-      document.getElementById('main-content').style.display = 'block';
+      document.getElementById('app-layout').style.display = 'flex';
 
       // Load Firestore real-time subscriptions, routing, search & chips
       loadFromStorage();
@@ -4379,8 +4977,2187 @@ window.addEventListener('DOMContentLoaded', async () => {
       STATE.currentUserProfile = null;
       document.getElementById('login-overlay').style.display = 'flex';
       document.getElementById('topnav').style.display = 'none';
-      document.getElementById('main-content').style.display = 'none';
+      document.getElementById('app-layout').style.display = 'none';
     }
   });
 });
+
+// ==========================================
+// NEW MODULES CLINICAL BUSINESS LOGIC
+// ==========================================
+
+// --- EMERGENCY / TRAUMA ---
+window.renderEmergencyTriage = function() {
+  const categories = ['Red', 'Orange', 'Yellow', 'Green', 'Blue'];
+  categories.forEach(cat => {
+    const listEl = document.getElementById(`triage-list-${cat.toLowerCase()}`);
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    
+    const cases = STATE.emergencyCases.filter(c => c.triageLevel === cat && c.status === 'Active');
+    if (cases.length === 0) {
+      listEl.innerHTML = '<div style="font-size:0.7rem; color:var(--text-3); text-align:center; padding:10px;">Empty</div>';
+      return;
+    }
+    
+    cases.forEach(c => {
+      const p = STATE.patients.find(pt => pt.id === c.patientId);
+      const name = p ? p.name : 'Unknown';
+      const div = document.createElement('div');
+      div.className = 'triage-card';
+      div.innerHTML = `
+        <div class="triage-card-id">${c.id} (${c.patientId})</div>
+        <div class="triage-card-name">${name}</div>
+        <div class="triage-card-complaint">${c.chiefComplaint}</div>
+        <div style="margin-top:6px; display:flex; gap:4px;">
+          <button class="glass-btn glass-btn-primary" style="padding:2px 4px; font-size:0.6rem;" onclick="assignERBay('${c.id}')">Resus</button>
+          <button class="glass-btn glass-btn-secondary" style="padding:2px 4px; font-size:0.6rem;" onclick="dischargeERCase('${c.id}')">Release</button>
+        </div>
+      `;
+      listEl.appendChild(div);
+    });
+  });
+};
+
+window.saveERQuickRegistration = function() {
+  const name = document.getElementById('er-q-name').value.trim();
+  const age = document.getElementById('er-q-age').value.trim();
+  const gender = document.getElementById('er-q-gender').value;
+  const complaint = document.getElementById('er-q-complaint').value.trim();
+  const broughtby = document.getElementById('er-q-broughtby').value.trim();
+  const triage = document.getElementById('er-q-triage').value;
+  
+  const pId = `AURA-ER-${Date.now().toString().slice(-4)}`;
+  const caseId = `ER-${Date.now().toString().slice(-4)}`;
+  
+  const newPatient = {
+    id: pId,
+    name, dob: 'N/A', gender, mobile: 'N/A', bloodGroup: '', emergency: broughtby,
+    insurance: 'N/A', abhaId: '', consentAcademic: true, consentCommercial: false, consentFuture: true,
+    regDate: new Date().toISOString(), status: 'ER Queue'
+  };
+  
+  const newCase = {
+    id: caseId,
+    patientId: pId,
+    triageLevel: triage,
+    chiefComplaint: complaint,
+    broughtBy: broughtby,
+    timeOfArrival: new Date().toISOString(),
+    status: 'Active',
+    disposition: triage === 'Red' ? 'Resus' : 'ER Bed',
+    mlcFlag: false
+  };
+  
+  Promise.all([
+    mutatePatient(newPatient),
+    convex.mutation(api.db.upsertEmergencyCase, newCase)
+  ]).then(() => {
+    showToast(`Quick ER Onboarded: Case ${caseId}`);
+    logAudit('Create', caseId, `Registered ER Quick Case for ${name} (${triage})`);
+    document.getElementById('er-q-name').value = '';
+    document.getElementById('er-q-complaint').value = '';
+    document.getElementById('er-q-broughtby').value = '';
+    STATE.activePanel = 'emergency-triage';
+    navigateToPanel('emergency-triage');
+  }).catch(err => showToast(err.message, 'error'));
+};
+
+window.assignERBay = function(caseId) {
+  const c = STATE.emergencyCases.find(cs => cs.id === caseId);
+  if (!c) return;
+  c.disposition = 'Resus';
+  convex.mutation(api.db.upsertEmergencyCase, c).then(() => {
+    showToast(`Assigned ${caseId} to Resuscitation Zone`);
+    window.renderEmergencyTriage();
+  });
+};
+
+window.dischargeERCase = function(caseId) {
+  const c = STATE.emergencyCases.find(cs => cs.id === caseId);
+  if (!c) return;
+  c.status = 'Completed';
+  c.disposition = 'Discharged';
+  
+  const p = STATE.patients.find(pt => pt.id === c.patientId);
+  if (p) {
+    p.status = 'Discharged';
+  }
+  
+  Promise.all([
+    convex.mutation(api.db.upsertEmergencyCase, c),
+    p ? mutatePatient(p) : Promise.resolve()
+  ]).then(() => {
+    showToast(`ER Case ${caseId} Released`);
+    logAudit('Edit', caseId, `Discharged patient from ER`);
+    window.renderEmergencyTriage();
+  });
+};
+
+window.renderEmergencyResus = function() {
+  const container = document.getElementById('emergency-resus');
+  if (!container) return;
+  
+  const resusCases = STATE.emergencyCases.filter(c => c.disposition === 'Resus' && c.status === 'Active');
+  
+  let html = '<h3 class="form-title">Critical Resuscitation Bay (P1 Monitor)</h3>';
+  if (resusCases.length === 0) {
+    html += '<p style="color:var(--text-3); text-align:center; padding:30px;">No patients currently in Resus Bay.</p>';
+    container.innerHTML = html;
+    return;
+  }
+  
+  resusCases.forEach(c => {
+    const p = STATE.patients.find(pt => pt.id === c.patientId);
+    const vitals = STATE.vitals.filter(v => v.patientId === c.patientId).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp))[0];
+    
+    html += `
+      <div class="resus-bay">
+        <div class="flex-between">
+          <strong>${p ? p.name : 'Unknown'} (${c.patientId})</strong>
+          <span class="status-indicator status-canceled">P1 - CRITICAL</span>
+        </div>
+        <div style="font-size:0.75rem; color:var(--text-2); margin-top:6px;">
+          Complaint: ${c.chiefComplaint} | Arrival: ${new Date(c.timeOfArrival).toLocaleTimeString()}
+        </div>
+        
+        <div class="vitals-grid" style="grid-template-columns: repeat(4, 1fr); margin-top:12px;">
+          <div class="vital-box" style="background:#fff;"><div class="vital-box-title">BP</div><div class="vital-box-value">${vitals ? vitals.bp : '110/70'}</div><div class="vital-box-unit">mmHg</div></div>
+          <div class="vital-box" style="background:#fff;"><div class="vital-box-title">Pulse</div><div class="vital-box-value">${vitals ? vitals.pulse : '96'}</div><div class="vital-box-unit">bpm</div></div>
+          <div class="vital-box" style="background:#fff;"><div class="vital-box-title">SpO2</div><div class="vital-box-value">${vitals ? vitals.spo2 : '91'}</div><div class="vital-box-unit">%</div></div>
+          <div class="vital-box" style="background:#fff;"><div class="vital-box-title">Temp</div><div class="vital-box-value">${vitals ? vitals.temp : '99'}</div><div class="vital-box-unit">°F</div></div>
+        </div>
+        
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button class="glass-btn glass-btn-primary" onclick="admitToICU('${c.patientId}', '${c.id}')">Transfer to ICU</button>
+          <button class="glass-btn glass-btn-secondary" onclick="logResusVital('${c.patientId}')">Quick Log Vitals</button>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+};
+
+window.admitToICU = function(pId, caseId) {
+  const bedNum = prompt("Assign ICU Bed (e.g. ICU-Bed 4):", "ICU-Bed 4");
+  if (!bedNum) return;
+  
+  const c = STATE.emergencyCases.find(cs => cs.id === caseId);
+  if (c) {
+    c.status = 'Transferred';
+    c.disposition = 'ICU Admitted';
+  }
+  
+  const newAdmission = {
+    id: `ICU-ADM-${Date.now()}`,
+    patientId: pId,
+    bedNumber: bedNum,
+    diagnosis: c ? c.chiefComplaint : 'ER Trauma Transfer',
+    ventilatorStatus: false,
+    isolationFlag: false,
+    acuityLevel: 'Critical',
+    nurseId: 'STF003',
+    apacheScore: 18,
+    sofaScore: 5,
+    ewsScore: 4,
+    timestamp: new Date().toISOString()
+  };
+  
+  const pat = STATE.patients.find(pt => pt.id === pId);
+  if (pat) {
+    pat.bedAssignment = bedNum;
+    pat.status = 'Admitted';
+  }
+  
+  Promise.all([
+    c ? convex.mutation(api.db.upsertEmergencyCase, c) : Promise.resolve(),
+    pat ? mutatePatient(pat) : Promise.resolve(),
+    convex.mutation(api.db.upsertIcuAdmission, newAdmission)
+  ]).then(() => {
+    showToast(`Admitted ${pId} to ICU bed: ${bedNum}`);
+    logAudit('Edit', pId, `Transferred ER patient to ICU`);
+    window.renderEmergencyResus();
+  }).catch(err => showToast(err.message, 'error'));
+};
+
+window.logResusVital = function(pId) {
+  const bp = prompt("BP (mmHg):", "120/80");
+  const pulse = parseInt(prompt("Pulse (bpm):", "72")) || 72;
+  const spo2 = parseInt(prompt("SpO2 (%):", "98")) || 98;
+  
+  const newVital = {
+    id: `VIT-${Date.now()}`,
+    patientId: pId,
+    bp, pulse, spo2, temp: 98.6, sugar: 100, notes: 'ER Resus Vital',
+    timestamp: new Date().toISOString()
+  };
+  
+  convex.mutation(api.db.upsertVitals, newVital).then(() => {
+    showToast("Vitals saved.");
+    window.renderEmergencyResus();
+  });
+};
+
+window.renderEmergencyBeds = function() {
+  const container = document.getElementById('emergency-beds');
+  if (!container) return;
+  
+  let bedsHtml = '';
+  for(let i=1; i<=8; i++) {
+    const bedName = `ER-Bed ${i}`;
+    const activeCase = STATE.emergencyCases.find(c => c.disposition === 'ER Bed' && c.status === 'Active');
+    const occupied = activeCase ? true : false;
+    
+    bedsHtml += `
+      <div class="glass-card" style="border-left:5px solid ${occupied ? 'var(--info)' : 'var(--success)'}; text-align:center; padding:10px;">
+        <strong>${bedName}</strong>
+        <p style="font-size:0.75rem; margin:6px 0;">${occupied ? `Case: ${activeCase.id}` : 'Available'}</p>
+      </div>
+    `;
+  }
+  
+  container.innerHTML = `
+    <h3 class="form-title">Emergency Bed Board</h3>
+    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; margin-top:12px;">
+      ${bedsHtml}
+    </div>
+  `;
+};
+
+window.renderEmergencyMLC = function() {
+  const container = document.getElementById('emergency-mlc');
+  if (!container) return;
+  
+  const mlcList = STATE.emergencyCases.filter(c => c.mlcFlag);
+  let rows = mlcList.map(m => `
+    <tr>
+      <td>${m.id}</td>
+      <td><code>${m.patientId}</code></td>
+      <td>${m.mlcDetails ? m.mlcDetails.injuryType : 'Trauma'}</td>
+      <td>${m.mlcDetails ? m.mlcDetails.firNumber : '-'}</td>
+      <td>${m.mlcDetails ? m.mlcDetails.policeStation : '-'}</td>
+      <td>${new Date(m.timeOfArrival).toLocaleDateString()}</td>
+    </tr>
+  `).join('');
+  
+  container.innerHTML = `
+    <div class="workspace-grid" style="grid-template-columns: 1.2fr 2fr; gap:16px;">
+      <div class="glass-card">
+        <h3 class="form-title">File MLC (Medico-Legal Case)</h3>
+        <form onsubmit="event.preventDefault(); saveMLC()">
+          <div class="form-group"><label>Select Active ER Case *</label>
+            <select id="mlc-case-id" required>
+              ${STATE.emergencyCases.filter(c => c.status === 'Active' && !c.mlcFlag).map(c => `<option value="${c.id}">${c.id} - Patient: ${c.patientId}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>FIR / Police Report Number *</label><input type="text" id="mlc-fir" placeholder="FIR-2026-X" required></div>
+          <div class="form-group"><label>Police Station Jurisdiction *</label><input type="text" id="mlc-station" placeholder="Halasuru Police" required></div>
+          <div class="form-group"><label>Injury Details & Classification *</label><input type="text" id="mlc-injury" placeholder="Laceration, blunt trauma" required></div>
+          <button class="glass-btn glass-btn-primary" type="submit">File MLC Record</button>
+        </form>
+      </div>
+      <div class="glass-card">
+        <h3 class="form-title">Active MLC Register</h3>
+        <div class="table-wrapper">
+          <table class="ehr-table">
+            <thead>
+              <tr><th>Case ID</th><th>Patient</th><th>Injury</th><th>FIR #</th><th>Jurisdiction</th><th>Date</th></tr>
+            </thead>
+            <tbody>${rows || '<tr><td colspan="6" style="text-align:center;color:var(--text-3)">No MLC cases registered.</td></tr>'}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+window.saveMLC = function() {
+  const caseId = document.getElementById('mlc-case-id').value;
+  const fir = document.getElementById('mlc-fir').value;
+  const station = document.getElementById('mlc-station').value;
+  const injury = document.getElementById('mlc-injury').value;
+  
+  const c = STATE.emergencyCases.find(cs => cs.id === caseId);
+  if (!c) return;
+  
+  c.mlcFlag = true;
+  c.mlcDetails = {
+    firNumber: fir,
+    policeStation: station,
+    injuryType: injury,
+    timestamp: new Date().toISOString()
+  };
+  
+  convex.mutation(api.db.upsertEmergencyCase, c).then(() => {
+    showToast("MLC Record filed successfully.");
+    logAudit('Edit', caseId, `Filed MLC record: FIR ${fir}`);
+    window.renderEmergencyMLC();
+  });
+};
+
+window.renderEmergencyHandover = function() {
+  const container = document.getElementById('emergency-handover');
+  if (!container) return;
+  
+  const handovers = STATE.clinicalRecords.filter(r => r.type === 'ERHandover');
+  let cards = handovers.map(h => `
+    <div style="background:var(--bg); border:1px solid var(--border); padding:10px; border-radius:8px; margin-bottom:8px; font-size:0.75rem;">
+      <div class="flex-between"><strong>Outgoing: ${h.nurseName}</strong> <span>${new Date(h.timestamp).toLocaleTimeString()}</span></div>
+      <div style="margin-top:4px;">Pending Tasks: ${h.notes}</div>
+    </div>
+  `).join('');
+  
+  container.innerHTML = `
+    <div class="workspace-grid" style="grid-template-columns: 1fr 1fr; gap:16px;">
+      <div class="glass-card">
+        <h3 class="form-title">ER Shift Handover log</h3>
+        <form onsubmit="event.preventDefault(); saveERHandover()">
+          <div class="form-group">
+            <label>Incoming Doctor / Nurse Name *</label>
+            <input type="text" id="er-ho-incoming" required placeholder="Dr. Suresh Gowda">
+          </div>
+          <div class="form-group">
+            <label>Pending Investigations & Critical Notes *</label>
+            <textarea id="er-ho-notes" required placeholder="3 CT Brain pending, 2 Resus beds occupied. Blood ordered."></textarea>
+          </div>
+          <button class="glass-btn glass-btn-primary" type="submit">Sign Off ER Handover</button>
+        </form>
+      </div>
+      <div class="glass-card">
+        <h3 class="form-title">ER Handover Logs</h3>
+        <div style="max-height: 350px; overflow-y: auto;">
+          ${cards || '<p style="color:var(--text-3); text-align:center;">No handovers recorded.</p>'}
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+window.saveERHandover = function() {
+  const incoming = document.getElementById('er-ho-incoming').value;
+  const notes = document.getElementById('er-ho-notes').value;
+  
+  const h = {
+    id: `ERHO-${Date.now()}`,
+    type: 'ERHandover',
+    incoming,
+    notes,
+    timestamp: new Date().toISOString(),
+    nurseName: STATE.currentUserProfile ? STATE.currentUserProfile.name : 'Staff Nurse'
+  };
+  
+  convex.mutation(api.db.upsertClinicalRecord, h).then(() => {
+    showToast("ER Handover complete.");
+    window.renderEmergencyHandover();
+  });
+};
+
+// --- ICU MODULE ---
+window.renderIcuOverview = function() {
+  const container = document.getElementById('icu-overview');
+  if (!container) return;
+  
+  const admissions = STATE.icuAdmissions || [];
+  let bedCards = '';
+  
+  for(let i=1; i<=8; i++) {
+    const bedName = `ICU-Bed ${i}`;
+    const adm = admissions.find(a => a.bedNumber === bedName && a.acuityLevel !== 'Discharged');
+    
+    let stateClass = 'stable';
+    let occupantName = 'Available';
+    let diagnosis = 'None';
+    let detailsHtml = '';
+    
+    if (adm) {
+      const p = STATE.patients.find(pt => pt.id === adm.patientId);
+      occupantName = p ? p.name : 'Unknown';
+      diagnosis = adm.diagnosis;
+      stateClass = adm.acuityLevel.toLowerCase(); // critical, stable, improving
+      
+      detailsHtml = `
+        <div class="icu-vitals-spark">
+          <span class="spark-val ${adm.ewsScore >= 5 ? 'critical' : ''}">EWS: ${adm.ewsScore}</span>
+          <span>${adm.ventilatorStatus ? '💨 VENTILATOR' : 'O2 Support'}</span>
+        </div>
+        <div style="margin-top:8px;">
+          <button class="glass-btn glass-btn-primary" style="padding:2px 6px; font-size:0.65rem;" onclick="viewIcuPatient('${adm.patientId}')">Monitor</button>
+        </div>
+      `;
+    }
+    
+    bedCards += `
+      <div class="icu-bed-card ${stateClass}">
+        <strong>${bedName}</strong>
+        <div style="font-weight:600; font-size:0.8rem; margin-top:4px;">${occupantName}</div>
+        <div style="font-size:0.7rem; color:var(--text-2); margin-top:2px;">${diagnosis}</div>
+        ${detailsHtml}
+      </div>
+    `;
+  }
+  
+  container.innerHTML = `
+    <h3 class="form-title">ICU Live Bed Map</h3>
+    <div class="icu-bed-grid" style="margin-top:15px;">
+      ${bedCards}
+    </div>
+  `;
+};
+
+window.viewIcuPatient = function(pId) {
+  // Store patient ID and route to ICU Monitor sub-panel
+  STATE.selectedPatientId = pId;
+  STATE.activePanel = 'icu-monitor';
+  navigateToPanel('icu-monitor');
+};
+
+window.renderIcuMonitor = function() {
+  const container = document.getElementById('icu-monitor');
+  if (!container) return;
+  
+  const pId = STATE.selectedPatientId;
+  if (!pId) {
+    container.innerHTML = '<p style="color:var(--text-3); text-align:center; padding:40px;">Please select an ICU patient from the Bed Map first.</p>';
+    return;
+  }
+  
+  const p = STATE.patients.find(pt => pt.id === pId);
+  const adm = STATE.icuAdmissions.find(a => a.patientId === pId);
+  const chartings = STATE.icuCharting.filter(c => c.patientId === pId && c.type === 'Vitals');
+  
+  container.innerHTML = `
+    <div class="workspace-grid" style="grid-template-columns: 2fr 1fr; gap:16px;">
+      <div class="glass-card">
+        <h3 class="form-title">Live Vitals & Ventilator Parameters: ${p ? p.name : 'Unknown'}</h3>
+        <div class="vitals-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom:15px;">
+          <div class="vital-box"><div class="vital-box-title">Heart Rate</div><div class="vital-box-value">${chartings.length > 0 ? chartings[chartings.length-1].hr : '82'}</div><div class="vital-box-unit">bpm</div></div>
+          <div class="vital-box"><div class="vital-box-title">SpO2</div><div class="vital-box-value">${chartings.length > 0 ? chartings[chartings.length-1].spo2 : '96'}</div><div class="vital-box-unit">%</div></div>
+          <div class="vital-box"><div class="vital-box-title">Resp Rate</div><div class="vital-box-value">${chartings.length > 0 ? chartings[chartings.length-1].rr : '18'}</div><div class="vital-box-unit">/min</div></div>
+          <div class="vital-box"><div class="vital-box-title">EtCO2</div><div class="vital-box-value">${chartings.length > 0 ? chartings[chartings.length-1].etco2 : '36'}</div><div class="vital-box-unit">mmHg</div></div>
+        </div>
+        
+        <h4 style="font-size:0.85rem; margin-bottom:10px;">Ventilator Settings</h4>
+        <div style="background:var(--bg); padding:12px; border-radius:8px; display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-bottom:15px;">
+          <div><label style="font-size:0.7rem;color:var(--text-3);">Mode</label><div><strong>CMV</strong></div></div>
+          <div><label style="font-size:0.7rem;color:var(--text-3);">FiO2 (%)</label><div><strong>45%</strong></div></div>
+          <div><label style="font-size:0.7rem;color:var(--text-3);">PEEP</label><div><strong>5 cmH2O</strong></div></div>
+          <div><label style="font-size:0.7rem;color:var(--text-3);">Tidal Volume</label><div><strong>420 ml</strong></div></div>
+        </div>
+        
+        <form onsubmit="event.preventDefault(); saveIcuVitals('${pId}')" style="background:var(--border-light); padding:10px; border-radius:8px;">
+          <h4 style="font-size:0.8rem; margin-bottom:10px;">Record Hourly ICU Vitals</h4>
+          <div class="form-grid" style="grid-template-columns:repeat(4, 1fr); gap:8px;">
+            <div class="form-group"><label>Heart Rate</label><input type="number" id="icu-v-hr" value="80" required></div>
+            <div class="form-group"><label>SpO2 %</label><input type="number" id="icu-v-spo2" value="98" required></div>
+            <div class="form-group"><label>Resp Rate</label><input type="number" id="icu-v-rr" value="16" required></div>
+            <div class="form-group"><label>EtCO2</label><input type="number" id="icu-v-etco2" value="35" required></div>
+          </div>
+          <button class="glass-btn glass-btn-primary" type="submit" style="margin-top:10px;">Log Vitals</button>
+        </form>
+      </div>
+      
+      <div class="glass-card">
+        <h3 class="form-title">Active Drips & Infusions</h3>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="background:rgba(70,15,117,0.05); padding:8px; border-radius:6px; border-left:3px solid var(--primary);">
+            <strong>Noradrenaline Drip</strong><br>
+            <small>Conc: 4mg in 50ml | Rate: 4 ml/hr</small>
+          </div>
+          <div style="background:rgba(70,15,117,0.05); padding:8px; border-radius:6px; border-left:3px solid var(--primary);">
+            <strong>Fentanyl Infusion</strong><br>
+            <small>Conc: 100mcg in 50ml | Rate: 2 ml/hr</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+window.saveIcuVitals = function(pId) {
+  const hr = parseInt(document.getElementById('icu-v-hr').value);
+  const spo2 = parseInt(document.getElementById('icu-v-spo2').value);
+  const rr = parseInt(document.getElementById('icu-v-rr').value);
+  const etco2 = parseInt(document.getElementById('icu-v-etco2').value);
+  
+  const entry = {
+    id: `ICU-V-${Date.now()}`,
+    patientId: pId,
+    type: 'Vitals',
+    hr, spo2, rr, etco2,
+    timestamp: new Date().toISOString(),
+    recordedBy: STATE.currentUserProfile ? STATE.currentUserProfile.name : 'ICU Nurse'
+  };
+  
+  convex.mutation(api.db.upsertIcuCharting, entry).then(() => {
+    showToast("ICU Vitals logged successfully.");
+    window.renderIcuMonitor();
+  });
+};
+
+window.renderIcuRounds = function() {
+  const container = document.getElementById('icu-rounds');
+  if (!container) return;
+  
+  container.innerHTML = `
+    <div class="glass-card" style="max-width: 600px; margin: auto;">
+      <h3 class="form-title">ICU Clinical Scoring (SOFA & APACHE II)</h3>
+      <form onsubmit="event.preventDefault(); saveIcuScores()">
+        <div class="form-group"><label>Select Admitted Patient *</label>
+          <select id="icu-score-pat" required>
+            ${STATE.icuAdmissions.map(a => `<option value="${a.patientId}">${a.bedNumber} - Patient: ${a.patientId}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group"><label>APACHE II Score (0 - 71)</label><input type="number" id="icu-score-apache" value="15" required></div>
+          <div class="form-group"><label>SOFA Score (0 - 24)</label><input type="number" id="icu-score-sofa" value="4" required></div>
+        </div>
+        <div class="form-group"><label>Daily FAST HUG Checklist Compliance</label>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; font-size:0.8rem;">
+            <label><input type="checkbox" id="fh-f" checked> F - Feeding Plan</label>
+            <label><input type="checkbox" id="fh-a" checked> A - Analgesia checked</label>
+            <label><input type="checkbox" id="fh-s" checked> S - Sedation vacation</label>
+            <label><input type="checkbox" id="fh-t" checked> T - Thrombo prophylaxis</label>
+            <label><input type="checkbox" id="fh-h" checked> H - Head elevated</label>
+            <label><input type="checkbox" id="fh-u" checked> U - Ulcer prophylaxis</label>
+            <label><input type="checkbox" id="fh-g" checked> G - Glucose control</label>
+          </div>
+        </div>
+        <button class="glass-btn glass-btn-primary" type="submit">Log Daily Scoring</button>
+      </form>
+    </div>
+  `;
+};
+
+window.saveIcuScores = function() {
+  const pId = document.getElementById('icu-score-pat').value;
+  const apache = parseInt(document.getElementById('icu-score-apache').value);
+  const sofa = parseInt(document.getElementById('icu-score-sofa').value);
+  
+  const adm = STATE.icuAdmissions.find(a => a.patientId === pId);
+  if (!adm) return;
+  
+  adm.apacheScore = apache;
+  adm.sofaScore = sofa;
+  adm.ewsScore = Math.floor(sofa / 2) + 2; // Derived score
+  
+  convex.mutation(api.db.upsertIcuAdmission, adm).then(() => {
+    showToast("ICU Scores logged successfully.");
+    logAudit('Edit', pId, `Logged SOFA: ${sofa}, APACHE II: ${apache}`);
+    STATE.activePanel = 'icu-overview';
+    navigateToPanel('icu-overview');
+  });
+};
+
+window.renderIcuProcedures = function() {
+  const container = document.getElementById('icu-procedures');
+  if (!container) return;
+  
+  let logsHtml = STATE.clinicalRecords.filter(r => r.type === 'ICUProcedure').map(l => `
+    <div style="background:var(--bg); border:1px solid var(--border); padding:8px; border-radius:6px; font-size:0.75rem; margin-bottom:8px;">
+      <div class="flex-between"><strong>${l.procedureName}</strong> <span>${new Date(l.timestamp).toLocaleDateString()}</span></div>
+      <div>Patient: ${l.patientId} | Performed by: ${l.doctorName}</div>
+    </div>
+  `).join('');
+  
+  container.innerHTML = `
+    <div class="workspace-grid" style="grid-template-columns: 1.2fr 2fr; gap:16px;">
+      <div class="glass-card">
+        <h3 class="form-title">Log Critical Care Procedure</h3>
+        <form onsubmit="event.preventDefault(); saveIcuProcedure()">
+          <div class="form-group"><label>Patient ID *</label>
+            <select id="icu-proc-pat" required>
+              ${STATE.icuAdmissions.map(a => `<option value="${a.patientId}">${a.bedNumber} - Patient: ${a.patientId}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>Procedure *</label>
+            <select id="icu-proc-name" required>
+              <option>Central Venous Line Insertion</option>
+              <option>Endotracheal Intubation</option>
+              <option>Arterial Line Cannulation</option>
+              <option>Urinary Catheterization</option>
+              <option>Thoracocentesis</option>
+            </select>
+          </div>
+          <button class="glass-btn glass-btn-primary" type="submit">Submit Procedure Entry</button>
+        </form>
+      </div>
+      <div class="glass-card">
+        <h3 class="form-title">Procedures Log Book</h3>
+        <div style="max-height:300px; overflow-y:auto;">
+          ${logsHtml || '<p style="color:var(--text-3); text-align:center;">No procedures logged yet.</p>'}
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+window.saveIcuProcedure = function() {
+  const pId = document.getElementById('icu-proc-pat').value;
+  const proc = document.getElementById('icu-proc-name').value;
+  
+  const rec = {
+    id: `PROC-${Date.now()}`,
+    patientId: pId,
+    type: 'ICUProcedure',
+    procedureName: proc,
+    timestamp: new Date().toISOString(),
+    doctorName: STATE.currentUserProfile ? STATE.currentUserProfile.name : 'ICU Specialist'
+  };
+  
+  convex.mutation(api.db.upsertClinicalRecord, rec).then(() => {
+    showToast(`Procedure recorded: ${proc}`);
+    logAudit('Create', rec.id, `Logged ICU procedure ${proc} for patient ${pId}`);
+    window.renderIcuProcedures();
+  });
+};
+
+window.renderIcuAlerts = function() {
+  const container = document.getElementById('icu-alerts');
+  if (!container) return;
+  
+  const criticals = STATE.icuAdmissions.filter(a => a.ewsScore >= 5);
+  let list = criticals.map(c => `
+    <div class="glass-card" style="border-left:5px solid var(--danger); margin-bottom:10px;">
+      <div class="flex-between"><strong>Bed: ${c.bedNumber}</strong> <span class="status-indicator status-canceled">HIGH RISK</span></div>
+      <div style="font-size:0.8rem; margin-top:4px;">Patient ID: ${c.patientId} | EWS Score: ${c.ewsScore}</div>
+      <div style="font-size:0.75rem; color:var(--text-2);">Auto-triggered Warning: Physiological deterioration imminent. Check vitals immediately.</div>
+    </div>
+  `).join('');
+  
+  container.innerHTML = `
+    <h3 class="form-title">Active ICU Early Warning System (EWS) Alerts</h3>
+    <div style="margin-top:15px;">
+      ${list || '<p style="color:var(--success); font-weight:600; text-align:center; padding:30px;">✓ All patients physiologically stable.</p>'}
+    </div>
+  `;
+};
+
+// --- OT / SURGERY ---
+window.renderOtSchedule = function() {
+  const container = document.getElementById('ot-schedule');
+  if (!container) return;
+  
+  const rooms = ['OT-1', 'OT-2', 'OT-3'];
+  let roomRows = '';
+  
+  rooms.forEach(room => {
+    const list = STATE.surgeries.filter(s => s.roomNumber === room && s.status !== 'Completed');
+    let blocks = list.map(s => {
+      const p = STATE.patients.find(pt => pt.id === s.patientId);
+      const name = p ? p.name : 'Unknown';
+      return `
+        <div class="ot-schedule-block">
+          <strong>${s.scheduledTime}</strong>: ${s.procedureName} (${name})
+          <div style="margin-top:4px;">
+            <button class="glass-btn glass-btn-primary" style="padding:1px 4px; font-size:0.6rem;" onclick="openIntraOpRecord('${s.id}')">Operate</button>
+            <button class="glass-btn glass-btn-secondary" style="padding:1px 4px; font-size:0.6rem;" onclick="completeSurgery('${s.id}')">Complete</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    roomRows += `
+      <div class="ot-room-row">
+        <div class="ot-room-label">${room}</div>
+        <div class="ot-room-schedule">${blocks || '<div style="font-size:0.75rem; color:var(--text-3); display:flex; align-items:center;">Empty</div>'}</div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = `
+    <h3 class="form-title">OT Rooms Live Scheduler</h3>
+    <div class="ot-gantt-container">${roomRows}</div>
+  `;
+};
+
+window.openIntraOpRecord = function(sId) {
+  STATE.selectedPatientId = sId;
+  STATE.activePanel = 'ot-intra';
+  navigateToPanel('ot-intra');
+};
+
+window.completeSurgery = function(sId) {
+  const s = STATE.surgeries.find(su => su.id === sId);
+  if (!s) return;
+  
+  s.status = 'Completed';
+  const pat = STATE.patients.find(p => p.id === s.patientId);
+  if (pat) {
+    pat.status = 'Post-Op Recovery';
+  }
+  
+  Promise.all([
+    convex.mutation(api.db.upsertSurgery, s),
+    pat ? mutatePatient(pat) : Promise.resolve()
+  ]).then(() => {
+    showToast("Surgery marked completed. Patient transferred to Recovery Room.");
+    logAudit('Edit', sId, `Completed surgical case: ${s.procedureName}`);
+    window.renderOtSchedule();
+  });
+};
+
+window.renderOtBooking = function() {
+  const container = document.getElementById('ot-booking');
+  if (!container) return;
+  
+  container.innerHTML = `
+    <div class="glass-card" style="max-width:550px; margin:auto;">
+      <h3 class="form-title">Book Surgical Operation</h3>
+      <form onsubmit="event.preventDefault(); saveSurgeryBooking()">
+        <div class="form-grid" style="grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group"><label>Patient ID *</label><input type="text" id="ot-b-pat" placeholder="AURA-2026-0001" required></div>
+          <div class="form-group"><label>OT Room *</label><select id="ot-b-room"><option>OT-1</option><option>OT-2</option><option>OT-3</option></select></div>
+        </div>
+        <div class="form-group"><label>Procedure Name *</label><input type="text" id="ot-b-proc" placeholder="Laparoscopic Appendectomy" required></div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group"><label>Surgeon *</label>
+            <select id="ot-b-surgeon">
+              ${DOCTORS.map(d => `<option value="${d.id}">${d.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>Anesthesiologist *</label>
+            <select id="ot-b-anest">
+              ${DOCTORS.map(d => `<option value="${d.id}">${d.name}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="form-grid" style="grid-template-columns:1.2fr 1fr; gap:10px;">
+          <div class="form-group"><label>Scheduled Date</label><input type="date" id="ot-b-date" value="${new Date().toISOString().split('T')[0]}" required></div>
+          <div class="form-group"><label>Scheduled Time</label><input type="time" id="ot-b-time" value="09:00" required></div>
+        </div>
+        <button class="glass-btn glass-btn-primary" type="submit" style="width:100%; margin-top:10px;">Schedule Surgery</button>
+      </form>
+    </div>
+  `;
+};
+
+window.saveSurgeryBooking = function() {
+  const pId = document.getElementById('ot-b-pat').value.trim();
+  const room = document.getElementById('ot-b-room').value;
+  const proc = document.getElementById('ot-b-proc').value.trim();
+  const surgeon = document.getElementById('ot-b-surgeon').value;
+  const anest = document.getElementById('ot-b-anest').value;
+  const date = document.getElementById('ot-b-date').value;
+  const time = document.getElementById('ot-b-time').value;
+  
+  const pat = STATE.patients.find(pt => pt.id === pId);
+  if (!pat) {
+    showToast("Invalid Patient ID", "error");
+    return;
+  }
+  
+  const sId = `SURG-${Date.now().toString().slice(-4)}`;
+  const newSurgery = {
+    id: sId,
+    patientId: pId,
+    procedureName: proc,
+    surgeonId: surgeon,
+    anesthetistId: anest,
+    roomNumber: room,
+    scheduledDate: date,
+    scheduledTime: time,
+    status: 'Scheduled',
+    preOpChecklist: { identityConfirmed: true, siteMarked: true, consentSigned: true }
+  };
+  
+  convex.mutation(api.db.upsertSurgery, newSurgery).then(() => {
+    showToast(`Surgery scheduled: ${sId}`);
+    logAudit('Create', sId, `Scheduled procedure ${proc} in ${room}`);
+    STATE.activePanel = 'ot-schedule';
+    navigateToPanel('ot-schedule');
+  }).catch(err => showToast(err.message, 'error'));
+};
+
+window.renderOtChecklist = function() {
+  const container = document.getElementById('ot-checklist');
+  if (!container) return;
+  
+  container.innerHTML = `
+    <div class="glass-card" style="max-width:550px; margin:auto;">
+      <h3 class="form-title">WHO Surgical Safety Checklist</h3>
+      <form onsubmit="event.preventDefault(); saveOtSafetyChecklist()">
+        <div class="form-group"><label>Select Scheduled Surgery Case *</label>
+          <select id="ot-safe-surg" required>
+            ${STATE.surgeries.filter(s => s.status === 'Scheduled').map(s => `<option value="${s.id}">${s.procedureName} - Patient: ${s.patientId}</option>`).join('')}
+          </select>
+        </div>
+        
+        <h4 style="margin-top:10px; margin-bottom:6px; font-size:0.8rem;">1. Sign In (Before induction of anesthesia)</h4>
+        <div style="font-size:0.78rem; display:flex; flex-direction:column; gap:4px;">
+          <label><input type="checkbox" id="sc-identity" checked> Patient identity, surgical site, and consent confirmed</label>
+          <label><input type="checkbox" id="sc-site"> Surgical site marked</label>
+          <label><input type="checkbox" id="sc-anesthesia"> Anesthesia safety check completed</label>
+          <label><input type="checkbox" id="sc-pulse"> Pulse oximeter active and functioning</label>
+        </div>
+        
+        <h4 style="margin-top:10px; margin-bottom:6px; font-size:0.8rem;">2. Time Out (Before skin incision)</h4>
+        <div style="font-size:0.78rem; display:flex; flex-direction:column; gap:4px;">
+          <label><input type="checkbox" id="sc-intro"> Team members introduced by name & role</label>
+          <label><input type="checkbox" id="sc-confirm"> Surgeon, Anesthetist & Nurse confirm patient, site, and procedure</label>
+          <label><input type="checkbox" id="sc-prophyl"> Antibiotic prophylaxis given within 60 mins</label>
+        </div>
+        
+        <button class="glass-btn glass-btn-primary" type="submit" style="width:100%; margin-top:12px;">Digitally Sign Checklist</button>
+      </form>
+    </div>
+  `;
+};
+
+window.saveOtSafetyChecklist = function() {
+  const sId = document.getElementById('ot-safe-surg').value;
+  const s = STATE.surgeries.find(su => su.id === sId);
+  if (!s) return;
+  
+  s.preOpChecklist = {
+    identityConfirmed: document.getElementById('sc-identity').checked,
+    siteMarked: document.getElementById('sc-site').checked,
+    anesthesiaSafetyChecked: document.getElementById('sc-anesthesia').checked,
+    pulseOximeterActive: document.getElementById('sc-pulse').checked,
+    teamIntroduced: document.getElementById('sc-intro').checked,
+    procedureConfirmed: document.getElementById('sc-confirm').checked,
+    antibioticsGiven: document.getElementById('sc-prophyl').checked,
+    signedBy: STATE.currentUserProfile ? STATE.currentUserProfile.name : 'Chief Surgeon',
+    timestamp: new Date().toISOString()
+  };
+  
+  s.status = 'In-Progress';
+  
+  convex.mutation(api.db.upsertSurgery, s).then(() => {
+    showToast("WHO Surgical Checklist Signed. Surgery initiated!");
+    logAudit('Edit', sId, `Signed WHO Surgical Safety Checklist`);
+    STATE.activePanel = 'ot-schedule';
+    navigateToPanel('ot-schedule');
+  });
+};
+
+window.renderOtPac = function() {
+  const container = document.getElementById('ot-pac');
+  if (!container) return;
+  
+  container.innerHTML = `
+    <div class="glass-card" style="max-width:550px; margin:auto;">
+      <h3 class="form-title">Pre-Anesthesia Checkup (PAC)</h3>
+      <form onsubmit="event.preventDefault(); savePAC()">
+        <div class="form-group"><label>Select Patient ID *</label>
+          <select id="pac-pat-id" required>
+            ${STATE.patients.map(p => `<option value="${p.id}">${p.name} (${p.id})</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group"><label>ASA Grading (I - VI) *</label><select id="pac-asa"><option>ASA I</option><option>ASA II</option><option>ASA III</option><option>ASA IV</option></select></div>
+          <div class="form-group"><label>Mallampati Score (1 - 4) *</label><select id="pac-mall"><option>Class 1</option><option>Class 2</option><option>Class 3</option><option>Class 4</option></select></div>
+        </div>
+        <div class="form-group"><label>Cardiac / Respiratory Evaluation</label><input type="text" id="pac-cardiac" value="Normal S1 S2. Chest clear."></div>
+        <div class="form-group"><label>Anesthesia Plan / Special Concerns</label><input type="text" id="pac-anest-plan" value="General Anesthesia with Intubation. No active allergies."></div>
+        <button class="glass-btn glass-btn-primary" type="submit">Save PAC Form</button>
+      </form>
+    </div>
+  `;
+};
+
+window.savePAC = function() {
+  const pId = document.getElementById('pac-pat-id').value;
+  const asa = document.getElementById('pac-asa').value;
+  const mallampati = document.getElementById('pac-mall').value;
+  const evaluation = document.getElementById('pac-cardiac').value;
+  const plan = document.getElementById('pac-anest-plan').value;
+  
+  const pac = {
+    id: `PAC-${Date.now()}`,
+    patientId: pId,
+    type: 'PAC',
+    asa, mallampati, evaluation, plan,
+    timestamp: new Date().toISOString(),
+    anesthetistName: STATE.currentUserProfile ? STATE.currentUserProfile.name : 'Dr. Ananya Sharma'
+  };
+  
+  convex.mutation(api.db.upsertClinicalRecord, pac).then(() => {
+    showToast("PAC Record saved successfully.");
+    logAudit('Create', pac.id, `Recorded PAC for patient ${pId}`);
+    STATE.activePanel = 'ot-schedule';
+    navigateToPanel('ot-schedule');
+  });
+};
+
+window.renderOtIntra = function() {
+  const container = document.getElementById('ot-intra');
+  if (!container) return;
+  
+  const sId = STATE.selectedPatientId;
+  const surg = STATE.surgeries.find(s => s.id === sId);
+  
+  if (!surg) {
+    container.innerHTML = '<p style="color:var(--text-3); text-align:center; padding:40px;">Please click "Operate" on an active surgery from the OT Schedule Board.</p>';
+    return;
+  }
+  
+  const p = STATE.patients.find(pt => pt.id === surg.patientId);
+  
+  container.innerHTML = `
+    <div class="glass-card" style="max-width:550px; margin:auto;">
+      <h3 class="form-title">Intra-Operative Record: Case ${surg.id}</h3>
+      <div style="font-size:0.8rem; color:var(--text-2); margin-bottom:12px;">
+        Procedure: ${surg.procedureName} | Patient: ${p ? p.name : surg.patientId}
+      </div>
+      <form onsubmit="event.preventDefault(); saveIntraOp()">
+        <div class="form-group"><label>Intra-Op Surgical Findings</label><textarea id="io-findings" placeholder="Describe anatomy, pathology, and actions..." required></textarea></div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group"><label>Estimated Blood Loss (ml)</label><input type="number" id="io-blood-loss" value="150"></div>
+          <div class="form-group"><label>Implants / Prosthesis Used</label><input type="text" id="io-implants" placeholder="Titanium plate, mesh, none"></div>
+        </div>
+        <button class="glass-btn glass-btn-primary" type="submit">Save Intra-Op Record</button>
+      </form>
+    </div>
+  `;
+};
+
+window.saveIntraOp = function() {
+  const sId = STATE.selectedPatientId;
+  const surg = STATE.surgeries.find(s => s.id === sId);
+  if (!surg) return;
+  
+  const findings = document.getElementById('io-findings').value;
+  const bloodLoss = parseInt(document.getElementById('io-blood-loss').value) || 0;
+  const implants = document.getElementById('io-implants').value;
+  
+  surg.intraOpRecord = {
+    findings,
+    bloodLoss,
+    implants,
+    recordedBy: STATE.currentUserProfile ? STATE.currentUserProfile.name : 'Dr. Vikranth Reddy',
+    timestamp: new Date().toISOString()
+  };
+  
+  convex.mutation(api.db.upsertSurgery, surg).then(() => {
+    showToast("Intra-Operative record saved successfully.");
+    logAudit('Edit', sId, `Recorded intra-op findings for case ${sId}`);
+    STATE.activePanel = 'ot-schedule';
+    navigateToPanel('ot-schedule');
+  });
+};
+
+window.renderOtRecovery = function() {
+  const container = document.getElementById('ot-recovery');
+  if (!container) return;
+  
+  const postOps = STATE.surgeries.filter(s => s.status === 'Completed' && (!s.postOpRecovery || s.postOpRecovery.destination !== 'Discharged'));
+  
+  let cards = postOps.map(s => {
+    const p = STATE.patients.find(pt => pt.id === s.patientId);
+    const score = s.postOpRecovery ? s.postOpRecovery.aldreteScore : 8;
+    return `
+      <div style="background:var(--bg); border:1px solid var(--border); padding:10px; border-radius:8px; margin-bottom:10px;">
+        <div class="flex-between"><strong>Patient: ${p ? p.name : s.patientId}</strong> <span>Score: ${score}/10</span></div>
+        <div style="font-size:0.75rem; color:var(--text-2); margin-top:4px;">Procedure: ${s.procedureName}</div>
+        <div style="margin-top:8px; display:flex; gap:6px;">
+          <button class="glass-btn glass-btn-primary" style="padding:2px 6px; font-size:0.7rem;" onclick="releaseFromRecovery('${s.id}', 'Ward')">Send to Ward</button>
+          <button class="glass-btn glass-btn-secondary" style="padding:2px 6px; font-size:0.7rem;" onclick="releaseFromRecovery('${s.id}', 'ICU')">Send to ICU</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  container.innerHTML = `
+    <h3 class="form-title">Post-Op Recovery Room (PACU)</h3>
+    <div style="max-height: 400px; overflow-y: auto; margin-top:12px;">
+      ${cards || '<p style="color:var(--text-3); text-align:center;">No patients currently in PACU recovery.</p>'}
+    </div>
+  `;
+};
+
+window.releaseFromRecovery = function(sId, dest) {
+  const s = STATE.surgeries.find(su => su.id === sId);
+  if (!s) return;
+  
+  s.postOpRecovery = {
+    aldreteScore: 9,
+    painScore: 2,
+    destination: dest,
+    releasedBy: STATE.currentUserProfile ? STATE.currentUserProfile.name : 'Recovery Nurse',
+    timestamp: new Date().toISOString()
+  };
+  
+  const pat = STATE.patients.find(p => p.id === s.patientId);
+  if (pat) {
+    pat.bedAssignment = dest === 'ICU' ? 'ICU-Bed 1' : 'Bed 1';
+    pat.status = 'Admitted';
+  }
+  
+  Promise.all([
+    convex.mutation(api.db.upsertSurgery, s),
+    pat ? mutatePatient(pat) : Promise.resolve()
+  ]).then(() => {
+    showToast(`Released patient to ${dest}`);
+    logAudit('Edit', s.patientId, `Transferred post-op patient to ${dest}`);
+    window.renderOtRecovery();
+  });
+};
+
+window.renderOtAnalytics = function() {
+  const container = document.getElementById('ot-analytics');
+  if (!container) return;
+  
+  const total = STATE.surgeries.length;
+  const completed = STATE.surgeries.filter(s => s.status === 'Completed').length;
+  const inProgress = STATE.surgeries.filter(s => s.status === 'In-Progress').length;
+  const utilization = total > 0 ? Math.round((completed / total) * 100) : 0;
+  
+  container.innerHTML = `
+    <h3 class="form-title">OT Room Utilization & Performance</h3>
+    <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-top:15px;">
+      <div class="glass-card stat-card">
+        <div class="stat-details"><span class="stat-label">Total Procedures</span><span class="stat-val">${total}</span></div>
+      </div>
+      <div class="glass-card stat-card">
+        <div class="stat-details"><span class="stat-label">Completed Cases</span><span class="stat-val">${completed}</span></div>
+      </div>
+      <div class="glass-card stat-card">
+        <div class="stat-details"><span class="stat-label">OT Utilization Rate</span><span class="stat-val">${utilization}%</span></div>
+      </div>
+    </div>
+  `;
+};
+
+// --- BLOOD BANK ---
+window.renderBloodStock = function() {
+  const container = document.getElementById('bloodbank-stock');
+  if (!container) return;
+  
+  const stock = STATE.bloodInventory || [];
+  let cardsHtml = stock.map(s => {
+    const isLow = s.units < 5;
+    return `
+      <div class="blood-group-card ${isLow ? 'blood-stock-low' : ''}">
+        <div class="blood-group-title">${s.bloodGroup}</div>
+        <div style="font-size:0.75rem; color:var(--text-3); font-weight:600;">${s.component}</div>
+        <div class="blood-units-count">${s.units} Units</div>
+        <span style="font-size:0.65rem; color:var(--text-3);">Exp: ${new Date(s.expiry).toLocaleDateString()}</span>
+      </div>
+    `;
+  }).join('');
+  
+  container.innerHTML = `
+    <h3 class="form-title">Blood Group Component Inventory</h3>
+    <div class="blood-stock-grid" style="margin-top:15px;">
+      ${cardsHtml || '<p style="color:var(--text-3)">No stock record loaded.</p>'}
+    </div>
+  `;
+};
+
+window.renderBloodDonor = function() {
+  const container = document.getElementById('bloodbank-donor');
+  if (!container) return;
+  
+  let donors = STATE.donors || [];
+  let rows = donors.map(d => `
+    <tr>
+      <td>${d.id}</td>
+      <td class="text-bold">${d.name}</td>
+      <td>${d.bloodGroup}</td>
+      <td>${d.mobile}</td>
+      <td>${new Date(d.donationDate).toLocaleDateString()}</td>
+      <td><span class="status-indicator status-done">${d.eligibility}</span></td>
+    </tr>
+  `).join('');
+  
+  container.innerHTML = `
+    <div class="workspace-grid" style="grid-template-columns: 1.2fr 2fr; gap:16px;">
+      <div class="glass-card">
+        <h3 class="form-title">Register Blood Donor</h3>
+        <form onsubmit="event.preventDefault(); saveDonor()">
+          <div class="form-group"><label>Full Name *</label><input type="text" id="donor-name" required placeholder="Kumar Mangalam"></div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="form-group"><label>Age *</label><input type="number" id="donor-age" required placeholder="25"></div>
+            <div class="form-group"><label>Blood Group *</label><select id="donor-blood" required><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>O+</option><option>O-</option><option>AB+</option><option>AB-</option></select></div>
+          </div>
+          <div class="form-group"><label>Mobile Phone *</label><input type="tel" id="donor-phone" required placeholder="9876543210"></div>
+          <button class="glass-btn glass-btn-primary" type="submit">Verify & Register Donor</button>
+        </form>
+      </div>
+      <div class="glass-card">
+        <h3 class="form-title">Donor Registry</h3>
+        <div class="table-wrapper">
+          <table class="ehr-table">
+            <thead>
+              <tr><th>ID</th><th>Name</th><th>Group</th><th>Mobile</th><th>Reg Date</th><th>Status</th></tr>
+            </thead>
+            <tbody>${rows || '<tr><td colspan="6" style="text-align:center;color:var(--text-3)">No donors registered.</td></tr>'}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+window.saveDonor = function() {
+  const name = document.getElementById('donor-name').value;
+  const age = document.getElementById('donor-age').value;
+  const bloodGroup = document.getElementById('donor-blood').value;
+  const mobile = document.getElementById('donor-phone').value;
+  
+  const dId = `DON-${Date.now().toString().slice(-4)}`;
+  const newDonor = {
+    id: dId,
+    name, age: parseInt(age), bloodGroup, mobile,
+    donationDate: new Date().toISOString(),
+    eligibility: 'Eligible'
+  };
+  
+  convex.mutation(api.db.upsertDonor, newDonor).then(() => {
+    showToast(`Donor registered: ${dId}`);
+    window.renderBloodDonor();
+  });
+};
+
+window.renderBloodDonation = function() {
+  const container = document.getElementById('bloodbank-donation');
+  if (!container) return;
+  
+  container.innerHTML = `
+    <div class="glass-card" style="max-width:550px; margin:auto;">
+      <h3 class="form-title">Blood Bag Collection Logger</h3>
+      <form onsubmit="event.preventDefault(); saveDonationBag()">
+        <div class="form-group"><label>Select Registered Donor *</label>
+          <select id="bag-donor-select" required>
+            ${(STATE.donors || []).map(d => `<option value="${d.id}">${d.name} (${d.bloodGroup})</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group"><label>Bag ID *</label><input type="text" id="bag-id" placeholder="BAG-1082" required></div>
+          <div class="form-group"><label>Component Separation *</label>
+            <select id="bag-component" required>
+              <option>Whole Blood</option>
+              <option>PRBC</option>
+              <option>FFP</option>
+              <option>Platelets</option>
+            </select>
+          </div>
+        </div>
+        <button class="glass-btn glass-btn-primary" type="submit" style="width:100%; margin-top:10px;">Log Collection Bag</button>
+      </form>
+    </div>
+  `;
+};
+
+window.saveDonationBag = function() {
+  const donorId = document.getElementById('bag-donor-select').value;
+  const bagId = document.getElementById('bag-id').value.trim();
+  const component = document.getElementById('bag-component').value;
+  
+  const donor = STATE.donors.find(d => d.id === donorId);
+  if (!donor) return;
+  
+  const newStock = {
+    id: `BLD-${bagId}`,
+    bloodGroup: donor.bloodGroup,
+    component,
+    units: 1,
+    expiry: new Date(Date.now() + 35*24*3600*1000).toISOString().split('T')[0]
+  };
+  
+  convex.mutation(api.db.upsertBloodInventory, newStock).then(() => {
+    showToast(`Logged blood bag units: ${bagId}`);
+    logAudit('Create', newStock.id, `Collected blood component ${component} from donor ${donorId}`);
+    STATE.activePanel = 'bloodbank-stock';
+    navigateToPanel('bloodbank-stock');
+  });
+};
+
+window.renderBloodCrossMatch = function() {
+  const container = document.getElementById('bloodbank-crossmatch');
+  if (!container) return;
+  
+  const requests = STATE.bloodRequests || [];
+  let rows = requests.map(r => `
+    <tr>
+      <td>${r.id}</td>
+      <td><code>${r.patientId}</code></td>
+      <td>${r.bloodGroup}</td>
+      <td>${r.units} Units</td>
+      <td><span class="status-indicator status-pending">${r.status}</span></td>
+      <td>
+        <button class="glass-btn glass-btn-success" style="padding:2px 6px; font-size:0.7rem;" onclick="approveCrossMatch('${r.id}')">Approve Cross</button>
+      </td>
+    </tr>
+  `).join('');
+  
+  container.innerHTML = `
+    <h3 class="form-title">Active Blood Cross-Match Requests</h3>
+    <div class="table-wrapper" style="margin-top:12px;">
+      <table class="ehr-table">
+        <thead>
+          <tr><th>Request ID</th><th>Patient</th><th>Blood Group</th><th>Requested</th><th>Status</th><th>Action</th></tr>
+        </thead>
+        <tbody>${rows || '<tr><td colspan="6" style="text-align:center;color:var(--text-3)">No active requests.</td></tr>'}</tbody>
+      </table>
+    </div>
+  `;
+};
+
+window.approveCrossMatch = function(reqId) {
+  const r = STATE.bloodRequests.find(rq => rq.id === reqId);
+  if (!r) return;
+  
+  r.status = 'Approved / Matched';
+  convex.mutation(api.db.upsertBloodRequest, r).then(() => {
+    showToast(`Cross-Match approved for Request: ${reqId}`);
+    window.renderBloodCrossMatch();
+  });
+};
+
+window.renderBloodIssue = function() {
+  const container = document.getElementById('bloodbank-issue');
+  if (!container) return;
+  
+  const approved = (STATE.bloodRequests || []).filter(r => r.status === 'Approved / Matched');
+  let cards = approved.map(r => `
+    <div style="background:var(--bg); border:1px solid var(--border); padding:10px; border-radius:8px; margin-bottom:8px; font-size:0.75rem;">
+      <div class="flex-between"><strong>Request: ${r.id}</strong> <span>Group: ${r.bloodGroup}</span></div>
+      <div style="margin-top:4px;">Patient ID: ${r.patientId} | Units: ${r.units}</div>
+      <button class="glass-btn glass-btn-primary" style="margin-top:8px; padding:2px 6px; font-size:0.7rem;" onclick="issueBloodBag('${r.id}')">Issue Blood Units</button>
+    </div>
+  `).join('');
+  
+  container.innerHTML = `
+    <div class="workspace-grid" style="grid-template-columns: 1fr 1fr; gap:16px;">
+      <div class="glass-card">
+        <h3 class="form-title">Transfusion Reaction Log</h3>
+        <form onsubmit="event.preventDefault(); saveTransfusionReaction()">
+          <div class="form-group"><label>Patient ID *</label><input type="text" id="tr-pat-id" placeholder="AURA-2026-0001" required></div>
+          <div class="form-group"><label>Reaction Classification *</label><select id="tr-class"><option>Febrile Non-Hemolytic</option><option>Acute Hemolytic Reaction</option><option>Allergic / Anaphylactic</option></select></div>
+          <div class="form-group"><label>Severity Grading *</label><select id="tr-severity"><option>Mild</option><option>Moderate</option><option>Severe / Critical</option></select></div>
+          <button class="glass-btn glass-btn-danger" type="submit">Log Adverse Reaction</button>
+        </form>
+      </div>
+      <div class="glass-card">
+        <h3 class="form-title">Issue Blood Component</h3>
+        <div style="max-height:350px; overflow-y:auto;">
+          ${cards || '<p style="color:var(--text-3); text-align:center;">No pending matched requests for issue.</p>'}
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+window.issueBloodBag = function(reqId) {
+  const r = STATE.bloodRequests.find(rq => rq.id === reqId);
+  if (!r) return;
+  
+  r.status = 'Issued';
+  
+  const inventoryMatch = STATE.bloodInventory.find(bi => bi.bloodGroup === r.bloodGroup);
+  if (inventoryMatch && inventoryMatch.units >= r.units) {
+    inventoryMatch.units -= r.units;
+  }
+  
+  Promise.all([
+    convex.mutation(api.db.upsertBloodRequest, r),
+    inventoryMatch ? convex.mutation(api.db.upsertBloodInventory, inventoryMatch) : Promise.resolve()
+  ]).then(() => {
+    showToast(`Blood units successfully issued to Ward for Request: ${reqId}`);
+    logAudit('Edit', reqId, `Issued ${r.units} units of ${r.bloodGroup} blood`);
+    window.renderBloodIssue();
+  });
+};
+
+window.saveTransfusionReaction = function() {
+  const pId = document.getElementById('tr-pat-id').value.trim();
+  const reaction = document.getElementById('tr-class').value;
+  const severity = document.getElementById('tr-severity').value;
+  
+  const log = {
+    id: `REAC-${Date.now()}`,
+    patientId: pId,
+    type: 'TransfusionReaction',
+    reaction, severity,
+    timestamp: new Date().toISOString(),
+    recordedBy: STATE.currentUserProfile ? STATE.currentUserProfile.name : 'Ward Nurse'
+  };
+  
+  convex.mutation(api.db.upsertClinicalRecord, log).then(() => {
+    showToast("Adverse reaction logged. Warnings broadcasted to Nurse station.", "error");
+    logAudit('Create', log.id, `CRITICAL: Transfusion reaction logged for patient ${pId}`);
+    document.getElementById('tr-pat-id').value = '';
+  });
+};
+
+// --- DIET & NUTRITION ---
+window.renderDietKitchen = function() {
+  const container = document.getElementById('diet-kitchen');
+  if (!container) return;
+  
+  const orders = STATE.dietOrders || [];
+  let summary = { Regular: 0, Diabetic: 0, Renal: 0, Soft: 0, Liquid: 0, NBM: 0 };
+  
+  orders.forEach(o => {
+    if (o.dietType.toLowerCase().includes('regular')) summary.Regular++;
+    else if (o.dietType.toLowerCase().includes('diabetic')) summary.Diabetic++;
+    else if (o.dietType.toLowerCase().includes('renal')) summary.Renal++;
+    else if (o.dietType.toLowerCase().includes('soft')) summary.Soft++;
+    else if (o.dietType.toLowerCase().includes('liquid')) summary.Liquid++;
+    else if (o.dietType.toLowerCase().includes('nbm')) summary.NBM++;
+  });
+  
+  container.innerHTML = `
+    <h3 class="form-title">Kitchen Dietary Preparation Board</h3>
+    <div class="stats-grid" style="grid-template-columns: repeat(6, 1fr); margin-top:15px; margin-bottom:16px;">
+      ${Object.keys(summary).map(key => `
+        <div class="glass-card" style="padding:10px; text-align:center;">
+          <strong>${key}</strong>
+          <div style="font-size:1.5rem; font-weight:700; color:var(--primary); margin-top:4px;">${summary[key]}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+};
+
+window.renderDietOrders = function() {
+  const container = document.getElementById('diet-orders');
+  if (!container) return;
+  
+  const list = STATE.dietOrders || [];
+  let rows = list.map(o => `
+    <tr>
+      <td><code>${o.patientId}</code></td>
+      <td class="text-bold">${o.dietType}</td>
+      <td>${o.preference}</td>
+      <td>${o.allergens.join(', ') || 'None'}</td>
+      <td><span class="status-indicator status-active">${o.breakfast || 'Pending'}</span></td>
+    </tr>
+  `).join('');
+  
+  container.innerHTML = `
+    <div class="workspace-grid" style="grid-template-columns: 1.2fr 2fr; gap:16px;">
+      <div class="glass-card">
+        <h3 class="form-title">Record Dietary Care Plan</h3>
+        <form onsubmit="event.preventDefault(); saveDietOrder()">
+          <div class="form-group"><label>Patient ID *</label><input type="text" id="diet-pat" placeholder="AURA-2026-0001" required></div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="form-group"><label>Dietary Regime *</label>
+              <select id="diet-regime" required>
+                <option>Regular Standard</option>
+                <option>Cardiac / Low Sodium</option>
+                <option>Diabetic Carbohydrate Restricted</option>
+                <option>Renal Protein Restricted</option>
+                <option>Clear Liquid</option>
+                <option>NBM (Fasting)</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Veg / Non-Veg Preferences</label><select id="diet-pref"><option>Veg</option><option>Non-Veg</option><option>Egg</option></select></div>
+          </div>
+          <div class="form-group"><label>Allergen Locks (Comma separated)</label><input type="text" id="diet-allergens" placeholder="Nuts, Gluten, Shellfish"></div>
+          <button class="glass-btn glass-btn-primary" type="submit">Deploy Diet Plan</button>
+        </form>
+      </div>
+      <div class="glass-card">
+        <h3 class="form-title">Active Dietary Roster</h3>
+        <div class="table-wrapper">
+          <table class="ehr-table">
+            <thead>
+              <tr><th>Patient ID</th><th>Diet Regime</th><th>Pref</th><th>Allergen Lock</th><th>Status</th></tr>
+            </thead>
+            <tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:var(--text-3)">No active diet schedules.</td></tr>'}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+window.saveDietOrder = function() {
+  const pId = document.getElementById('diet-pat').value.trim();
+  const regime = document.getElementById('diet-regime').value;
+  const pref = document.getElementById('diet-pref').value;
+  const allergens = document.getElementById('diet-allergens').value.split(',').map(s=>s.trim()).filter(Boolean);
+  
+  const pat = STATE.patients.find(pt => pt.id === pId);
+  if (!pat) {
+    showToast("Invalid Patient ID", "error");
+    return;
+  }
+  
+  const newOrder = {
+    id: `DIET-${Date.now()}`,
+    patientId: pId,
+    dietType: regime,
+    preference: pref,
+    allergens,
+    breakfast: 'Prepared',
+    lunch: 'Pending',
+    dinner: 'Pending'
+  };
+  
+  convex.mutation(api.db.upsertDietOrder, newOrder).then(() => {
+    showToast("Diet Order deployed successfully.");
+    window.renderDietOrders();
+  });
+};
+
+window.renderDietScreening = function() {
+  const container = document.getElementById('diet-screening');
+  if (!container) return;
+  
+  container.innerHTML = `
+    <div class="glass-card" style="max-width:550px; margin:auto;">
+      <h3 class="form-title">Nutritional Risk Screening (NRS-2002)</h3>
+      <form onsubmit="event.preventDefault(); saveNutritionalScreening()">
+        <div class="form-group"><label>Patient ID *</label><input type="text" id="nrs-pat" placeholder="AURA-2026-0001" required></div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group"><label>Nutritional Condition Score (0 - 3)</label><input type="number" id="nrs-nutr" value="1" min="0" max="3" required></div>
+          <div class="form-group"><label>Severity of Disease Score (0 - 3)</label><input type="number" id="nrs-sev" value="1" min="0" max="3" required></div>
+        </div>
+        <div class="form-group"><label>Age Correction Check</label><label><input type="checkbox" id="nrs-age"> Patient Age >= 70 (+1 Point)</label></div>
+        <button class="glass-btn glass-btn-primary" type="submit" style="width:100%;">Calculate Screening Score</button>
+      </form>
+    </div>
+  `;
+};
+
+window.saveNutritionalScreening = function() {
+  const pId = document.getElementById('nrs-pat').value.trim();
+  const nutr = parseInt(document.getElementById('nrs-nutr').value);
+  const sev = parseInt(document.getElementById('nrs-sev').value);
+  const ageBonus = document.getElementById('nrs-age').checked ? 1 : 0;
+  
+  const pat = STATE.patients.find(pt => pt.id === pId);
+  if (!pat) {
+    showToast("Invalid Patient ID", "error");
+    return;
+  }
+  
+  const score = nutr + sev + ageBonus;
+  const risk = score >= 3 ? 'At Nutritional Risk - Dietitian consult recommended' : 'Stable';
+  
+  showToast(`NRS Score: ${score}/7. Status: ${risk}`, score >= 3 ? 'warning' : 'success');
+  logAudit('Create', pId, `Conducted NRS Screening for ${pId}: Score ${score}`);
+};
+
+window.renderDietTracker = function() {
+  const container = document.getElementById('diet-tracker');
+  if (!container) return;
+  
+  const list = STATE.dietOrders || [];
+  let cards = list.map(o => `
+    <div style="background:var(--bg); border:1px solid var(--border); padding:10px; border-radius:8px; margin-bottom:8px; font-size:0.75rem;">
+      <div class="flex-between"><strong>Patient: ${o.patientId}</strong> <span>Regime: ${o.dietType}</span></div>
+      <div style="margin-top:6px; display:flex; gap:10px;">
+        <span>Breakfast: <strong>${o.breakfast || 'Pending'}</strong></span>
+        <span>Lunch: <strong>${o.lunch || 'Pending'}</strong></span>
+        <span>Dinner: <strong>${o.dinner || 'Pending'}</strong></span>
+      </div>
+      <div style="margin-top:6px; display:flex; gap:6px;">
+        <button class="glass-btn glass-btn-primary" style="padding:2px 6px; font-size:0.7rem;" onclick="updateMealStatus('${o.id}', 'breakfast', 'Delivered')">Deliver Breakfast</button>
+        <button class="glass-btn glass-btn-secondary" style="padding:2px 6px; font-size:0.7rem;" onclick="updateMealStatus('${o.id}', 'lunch', 'Delivered')">Deliver Lunch</button>
+        <button class="glass-btn glass-btn-secondary" style="padding:2px 6px; font-size:0.7rem;" onclick="updateMealStatus('${o.id}', 'dinner', 'Delivered')">Deliver Dinner</button>
+      </div>
+    </div>
+  `).join('');
+  
+  container.innerHTML = `
+    <h3 class="form-title">Kitchen Meal Distribution Tracker</h3>
+    <div style="max-height:400px; overflow-y:auto; margin-top:12px;">
+      ${cards || '<p style="color:var(--text-3); text-align:center;">No diet rosters deployed.</p>'}
+    </div>
+  `;
+};
+
+window.updateMealStatus = function(orderId, meal, status) {
+  const o = STATE.dietOrders.find(ord => ord.id === orderId);
+  if (!o) return;
+  o[meal] = status;
+  
+  convex.mutation(api.db.upsertDietOrder, o).then(() => {
+    showToast(`Meal distribution logged: ${meal} ${status}`);
+    window.renderDietTracker();
+  });
+};
+
+// --- AMBULANCE & FLEET LOGISTICS ---
+window.renderTransportDispatch = function() {
+  const container = document.getElementById('transport-dispatch');
+  if (!container) return;
+  
+  const dispatchList = STATE.ambulanceTrips || [];
+  let cards = dispatchList.map(t => `
+    <div style="background:var(--bg); border:1px solid var(--border); padding:10px; border-radius:8px; margin-bottom:8px; font-size:0.75rem;">
+      <div class="flex-between"><strong>Trip: ${t.id} (${t.vehicleId})</strong> <span class="status-indicator status-pending">${t.status}</span></div>
+      <div style="margin-top:4px;">Caller: ${t.callerName} | Location: ${t.pickupLocation}</div>
+      <div style="margin-top:4px; font-style:italic;">Complaint: ${t.chiefComplaint}</div>
+      <div style="margin-top:8px;">
+        <button class="glass-btn glass-btn-success" style="padding:2px 6px; font-size:0.7rem;" onclick="arriveAmbulanceScene('${t.id}')">Arrive Scene</button>
+        <button class="glass-btn glass-btn-primary" style="padding:2px 6px; font-size:0.7rem;" onclick="completeAmbulanceTrip('${t.id}')">Arrival Hospital</button>
+      </div>
+    </div>
+  `).join('');
+  
+  container.innerHTML = `
+    <div class="workspace-grid" style="grid-template-columns: 1.2fr 2fr; gap:16px;">
+      <div class="glass-card">
+        <h3 class="form-title">Ambulance Dispatch Control</h3>
+        <form onsubmit="event.preventDefault(); dispatchVehicle()">
+          <div class="form-group"><label>Caller Name & Mobile *</label><input type="text" id="disp-caller" placeholder="Suresh Hegde" required></div>
+          <div class="form-group"><label>Pickup Location *</label><input type="text" id="disp-loc" placeholder="Trinity Circle Metro" required></div>
+          <div class="form-group"><label>Chief Complaint *</label><input type="text" id="disp-complaint" placeholder="RTA trauma, suspected neck injury" required></div>
+          <div class="form-grid" style="grid-template-columns: 1.2fr 1fr; gap:10px;">
+            <div class="form-group"><label>Assign Ambulance Fleet *</label>
+              <select id="disp-vehicle" required>
+                ${STATE.ambulanceFleet.filter(v => v.status === 'Available').map(v => `<option value="${v.id}">${v.id} - ${v.type} (${v.vehicleNum})</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group"><label>Urgency Level *</label><select id="disp-urgency"><option>Critical</option><option>High</option><option>Routine</option></select></div>
+          </div>
+          <button class="glass-btn glass-btn-primary" type="submit">Dispatch Fleet Vehicle</button>
+        </form>
+      </div>
+      <div class="glass-card">
+        <h3 class="form-title">Active Dispatches</h3>
+        <div style="max-height:400px; overflow-y:auto;">
+          ${cards || '<p style="color:var(--text-3); text-align:center;">No active dispatches.</p>'}
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+window.dispatchVehicle = function() {
+  const caller = document.getElementById('disp-caller').value;
+  const loc = document.getElementById('disp-loc').value;
+  const complaint = document.getElementById('disp-complaint').value;
+  const vehicle = document.getElementById('disp-vehicle').value;
+  const urgency = document.getElementById('disp-urgency').value;
+  
+  const tripId = `TRP-${Date.now().toString().slice(-4)}`;
+  const trip = {
+    id: tripId,
+    vehicleId: vehicle,
+    callerName: caller,
+    pickupLocation: loc,
+    chiefComplaint: complaint,
+    urgency,
+    status: 'Dispatched',
+    timestamps: { callReceived: new Date().toISOString(), dispatched: new Date().toISOString() }
+  };
+  
+  const fleetObj = STATE.ambulanceFleet.find(v => v.id === vehicle);
+  if (fleetObj) {
+    fleetObj.status = 'Dispatched';
+  }
+  
+  Promise.all([
+    convex.mutation(api.db.upsertAmbulanceTrip, trip),
+    fleetObj ? convex.mutation(api.db.upsertAmbulanceFleet, fleetObj) : Promise.resolve()
+  ]).then(() => {
+    showToast(`Ambulance Dispatched: ${vehicle}`);
+    logAudit('Create', tripId, `Dispatched fleet vehicle ${vehicle} for ${complaint}`);
+    window.renderTransportDispatch();
+  });
+};
+
+window.arriveAmbulanceScene = function(tripId) {
+  const t = STATE.ambulanceTrips.find(tr => tr.id === tripId);
+  if (!t) return;
+  
+  t.status = 'On-Scene';
+  t.timestamps.reachedScene = new Date().toISOString();
+  
+  const f = STATE.ambulanceFleet.find(fl => fl.id === t.vehicleId);
+  if (f) f.status = 'On-Scene';
+  
+  Promise.all([
+    convex.mutation(api.db.upsertAmbulanceTrip, t),
+    f ? convex.mutation(api.db.upsertAmbulanceFleet, f) : Promise.resolve()
+  ]).then(() => {
+    showToast(`Ambulance reached pickup scene.`);
+    window.renderTransportDispatch();
+  });
+};
+
+window.completeAmbulanceTrip = function(tripId) {
+  const t = STATE.ambulanceTrips.find(tr => tr.id === tripId);
+  if (!t) return;
+  
+  t.status = 'Arrived Hospital';
+  t.timestamps.hospitalArrival = new Date().toISOString();
+  
+  const f = STATE.ambulanceFleet.find(fl => fl.id === t.vehicleId);
+  if (f) f.status = 'Available';
+  
+  const billingId = `INV-${Date.now().toString().slice(-4)}`;
+  const newInvoice = {
+    id: billingId,
+    patientId: 'AURA-2026-0001',
+    services: [{ description: 'Emergency Ambulance Transport Charge', quantity: 1, rate: 1500, amount: 1500 }],
+    subtotal: 1500,
+    gst: 75,
+    insuranceCover: 0,
+    total: 1575,
+    status: 'Unsettled',
+    date: new Date().toISOString()
+  };
+  
+  Promise.all([
+    convex.mutation(api.db.upsertAmbulanceTrip, t),
+    f ? convex.mutation(api.db.upsertAmbulanceFleet, f) : Promise.resolve(),
+    convex.mutation(api.db.upsertBillingInvoice, newInvoice)
+  ]).then(() => {
+    showToast("Ambulance returned. transport charge ₹1500 added to billing ledger.");
+    logAudit('Edit', tripId, `Completed ambulance transit. Generated invoice ${billingId}`);
+    window.renderTransportDispatch();
+  });
+};
+
+window.renderTransportFleet = function() {
+  const container = document.getElementById('transport-fleet');
+  if (!container) return;
+  
+  const list = STATE.ambulanceFleet || [];
+  let rows = list.map(v => `
+    <tr>
+      <td><strong>${v.id}</strong></td>
+      <td>${v.vehicleNum}</td>
+      <td>${v.type}</td>
+      <td><span class="status-indicator ${v.status === 'Available' ? 'status-done' : 'status-active'}">${v.status}</span></td>
+      <td>${v.lastServiceDate}</td>
+    </tr>
+  `).join('');
+  
+  container.innerHTML = `
+    <h3 class="form-title">Ambulance Fleet Status</h3>
+    <div class="table-wrapper" style="margin-top:12px;">
+      <table class="ehr-table">
+        <thead>
+          <tr><th>ID</th><th>Vehicle Registration</th><th>Type</th><th>Status</th><th>Last Service</th></tr>
+        </thead>
+        <tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:var(--text-3)">Fleet registry empty.</td></tr>'}</tbody>
+      </table>
+    </div>
+  `;
+};
+
+window.renderTransportTrips = function() {
+  const container = document.getElementById('transport-trips');
+  if (!container) return;
+  
+  const list = STATE.ambulanceTrips || [];
+  let rows = list.map(t => `
+    <tr>
+      <td>${t.id}</td>
+      <td>${t.vehicleId}</td>
+      <td>${t.callerName}</td>
+      <td>${t.pickupLocation}</td>
+      <td><span class="status-indicator status-done">${t.status}</span></td>
+      <td>${t.timestamps.callReceived ? new Date(t.timestamps.callReceived).toLocaleTimeString() : '-'}</td>
+    </tr>
+  `).join('');
+  
+  container.innerHTML = `
+    <h3 class="form-title">Historical Trip Logs</h3>
+    <div class="table-wrapper" style="margin-top:12px;">
+      <table class="ehr-table">
+        <thead>
+          <tr><th>ID</th><th>Vehicle</th><th>Caller</th><th>Location</th><th>Status</th><th>Time</th></tr>
+        </thead>
+        <tbody>${rows || '<tr><td colspan="6" style="text-align:center;color:var(--text-3)">No trip logs filed.</td></tr>'}</tbody>
+      </table>
+    </div>
+  `;
+};
+
+window.renderTransportVehicles = function() {
+  const container = document.getElementById('transport-vehicles');
+  if (!container) return;
+  
+  container.innerHTML = `
+    <div class="glass-card" style="max-width:550px; margin:auto;">
+      <h3 class="form-title">Register Fleet Vehicle</h3>
+      <form onsubmit="event.preventDefault(); saveFleetVehicle()">
+        <div class="form-group"><label>Vehicle Registration Number *</label><input type="text" id="fv-reg" placeholder="KA-03-GA-1234" required></div>
+        <div class="form-group"><label>Ambulance Type *</label>
+          <select id="fv-type" required>
+            <option>Advanced Life Support (ALS)</option>
+            <option>Basic Life Support (BLS)</option>
+            <option>Patient Transport Van</option>
+          </select>
+        </div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group"><label>Insurance Expiry Date</label><input type="date" id="fv-ins" value="${new Date(Date.now() + 180*24*3600*1000).toISOString().split('T')[0]}" required></div>
+          <div class="form-group"><label>Fitness Certificate Expiry</label><input type="date" id="fv-fit" value="${new Date(Date.now() + 360*24*3600*1000).toISOString().split('T')[0]}" required></div>
+        </div>
+        <button class="glass-btn glass-btn-primary" type="submit" style="width:100%; margin-top:10px;">Register Vehicle</button>
+      </form>
+    </div>
+  `;
+};
+
+window.saveFleetVehicle = function() {
+  const reg = document.getElementById('fv-reg').value.trim();
+  const type = document.getElementById('fv-type').value;
+  const ins = document.getElementById('fv-ins').value;
+  
+  const vId = `AMB-0${STATE.ambulanceFleet.length + 1}`;
+  const newV = {
+    id: vId,
+    vehicleNum: reg,
+    type,
+    status: 'Available',
+    insuranceExpiry: ins,
+    lastServiceDate: new Date().toISOString().split('T')[0]
+  };
+  
+  convex.mutation(api.db.upsertAmbulanceFleet, newV).then(() => {
+    showToast(`Vehicle registered to Fleet: ${vId}`);
+    logAudit('Create', vId, `Registered new ambulance vehicle ${reg}`);
+    STATE.activePanel = 'transport-fleet';
+    navigateToPanel('transport-fleet');
+  });
+};
+
+// --- EXTRA LAB SUB PANELS ---
+window.renderLabCompleted = function() {
+  const container = document.getElementById('lab-completed');
+  if (!container) return;
+  
+  const completed = STATE.investigations.filter(i => i.status === 'Reported' && i.type === 'Lab');
+  let listHtml = completed.map(i => {
+    return `<div style="background:var(--bg); border:1px solid var(--border); padding:10px; border-radius:8px; margin-bottom:8px; font-size:0.75rem;">
+      <div class="flex-between"><strong>${i.testName}</strong> <span class="status-indicator status-done">Reported</span></div>
+      <div style="margin-top:4px;">Patient ID: ${i.patientId} | Parameter: ${i.parameter} | Value: <strong>${i.value}</strong></div>
+      <div style="font-size:0.7rem; color:var(--text-3); margin-top:4px;">Findings: ${i.findings || 'N/A'}</div>
+    </div>`;
+  }).join('');
+  
+  container.innerHTML = `
+    <h3 class="form-title">Completed Lab Reports Archive</h3>
+    <div style="max-height: 400px; overflow-y: auto; margin-top:10px;">
+      ${listHtml || '<p style="color:var(--text-3); text-align:center;">No completed reports found.</p>'}
+    </div>
+  `;
+};
+
+window.renderLabTracker = function() {
+  const container = document.getElementById('lab-tracker');
+  if (!container) return;
+  
+  const list = STATE.investigations.filter(i => i.type === 'Lab');
+  let rows = list.map(i => {
+    return `
+      <tr>
+        <td><code>${i.id}</code></td>
+        <td><code>${i.patientId}</code></td>
+        <td>${i.testName}</td>
+        <td><span class="status-indicator ${i.status === 'Reported' ? 'status-done' : 'status-pending'}">${i.status}</span></td>
+        <td>${i.timestamp ? new Date(i.timestamp).toLocaleTimeString() : '-'}</td>
+      </tr>
+    `;
+  }).join('');
+  
+  container.innerHTML = `
+    <h3 class="form-title">Sample Accession Pipeline</h3>
+    <div class="table-wrapper" style="margin-top:12px;">
+      <table class="ehr-table">
+        <thead>
+          <tr><th>Accession Code</th><th>Patient ID</th><th>Test Name</th><th>Status</th><th>Timestamp</th></tr>
+        </thead>
+        <tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:var(--text-3)">No active lab trackers.</td></tr>'}</tbody>
+      </table>
+    </div>
+  `;
+};
+
+window.renderLabQC = function() {
+  const container = document.getElementById('lab-qc');
+  if (!container) return;
+  
+  container.innerHTML = `
+    <h3 class="form-title">Laboratory Quality Control Dashboard</h3>
+    <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-top:12px;">
+      <div class="glass-card" style="text-align:center; padding:12px;">
+        <strong>Accuracy Rate</strong>
+        <div style="font-size:1.6rem; font-weight:700; color:var(--success); margin-top:6px;">99.4%</div>
+      </div>
+      <div class="glass-card" style="text-align:center; padding:12px;">
+        <strong>Average TAT</strong>
+        <div style="font-size:1.6rem; font-weight:700; color:var(--primary); margin-top:6px;">35 Min</div>
+      </div>
+      <div class="glass-card" style="text-align:center; padding:12px;">
+        <strong>Active QC Alerter</strong>
+        <div style="font-size:1.6rem; font-weight:700; color:var(--warning); margin-top:6px;">0 Alerts</div>
+      </div>
+    </div>
+  `;
+};
+
+window.renderLabReagents = function() {
+  const container = document.getElementById('lab-reagents');
+  if (!container) return;
+  
+  const list = STATE.labReagents || [];
+  let rows = list.map(r => {
+    let stat = 'status-done';
+    if (r.status === 'Low') stat = 'status-pending';
+    if (r.status === 'Critical') stat = 'status-canceled';
+    return `
+      <tr>
+        <td><strong>${r.name}</strong></td>
+        <td>${r.stock} Units</td>
+        <td>${r.expiry}</td>
+        <td><span class="status-indicator ${stat}">${r.status}</span></td>
+      </tr>
+    `;
+  }).join('');
+  
+  container.innerHTML = `
+    <h3 class="form-title">Reagents & Diagnostics Consumables</h3>
+    <div class="table-wrapper" style="margin-top:12px;">
+      <table class="ehr-table">
+        <thead>
+          <tr><th>Reagent Kit</th><th>Current Stock</th><th>Expiry Date</th><th>Status</th></tr>
+        </thead>
+        <tbody>${rows || '<tr><td colspan="4" style="text-align:center;color:var(--text-3)">No stock logs found.</td></tr>'}</tbody>
+      </table>
+    </div>
+  `;
+};
+
+// --- EXTRA RADIOLOGY SUB PANELS ---
+window.renderRadiologyCompleted = function() {
+  const container = document.getElementById('radiology-completed');
+  if (!container) return;
+  
+  const list = STATE.investigations.filter(i => i.status === 'Reported' && i.type === 'Radiology');
+  let cards = list.map(r => `
+    <div class="glass-card" style="margin-bottom:10px;">
+      <div class="flex-between"><strong>Study: ${r.testName}</strong> <span class="status-indicator status-done">Reported</span></div>
+      <div style="font-size:0.75rem; margin:6px 0;">Patient: ${r.patientId} | Parameter: ${r.parameter}</div>
+      <div style="background:var(--bg); padding:6px; border-radius:4px; font-size:0.75rem; font-family:monospace; margin-bottom:8px;">${r.value}</div>
+      <button class="glass-btn glass-btn-secondary" style="padding:2px 6px; font-size:0.7rem;" onclick="amendRadioReport('${r.id}')">Amend Report</button>
+    </div>
+  `).join('');
+  
+  container.innerHTML = `
+    <h3 class="form-title">Completed Radiology Studies</h3>
+    <div style="max-height: 450px; overflow-y: auto; margin-top:12px;">
+      ${cards || '<p style="color:var(--text-3); text-align:center;">No studies archive found.</p>'}
+    </div>
+  `;
+};
+
+window.amendRadioReport = function(iId) {
+  const i = STATE.investigations.find(inve => inve.id === iId);
+  if (!i) return;
+  
+  const text = prompt("Enter Amendment Addendum Text:", i.value);
+  if (!text) return;
+  
+  i.value = `${i.value}\n[AMENDMENT ${new Date().toLocaleDateString()}]: ${text}`;
+  i.status = 'Reported';
+  
+  convex.mutation(api.db.upsertInvestigation, i).then(() => {
+    showToast("Radiology study report amended successfully.");
+    window.renderRadiologyCompleted();
+  });
+};
+
+window.renderRadiologySchedule = function() {
+  const container = document.getElementById('radiology-schedule');
+  if (!container) return;
+  
+  container.innerHTML = `
+    <div class="glass-card" style="max-width:550px; margin:auto;">
+      <h3 class="form-title">Schedule Modality Imaging Scan</h3>
+      <form onsubmit="event.preventDefault(); saveRadioSchedule()">
+        <div class="form-group"><label>Patient ID *</label><input type="text" id="rs-pat" placeholder="AURA-2026-0001" required></div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group"><label>Modality *</label>
+            <select id="rs-modality" required><option>MRI Scan</option><option>CT Scan</option><option>X-Ray</option><option>Ultrasound</option></select>
+          </div>
+          <div class="form-group"><label>Target Region *</label><input type="text" id="rs-region" placeholder="Brain, Lumbar Spine, Abdomen" required></div>
+        </div>
+        <div class="form-grid" style="grid-template-columns:1.2fr 1fr; gap:10px;">
+          <div class="form-group"><label>Scheduled Date</label><input type="date" id="rs-date" value="${new Date().toISOString().split('T')[0]}" required></div>
+          <div class="form-group"><label>Time Slot</label><input type="time" id="rs-time" value="10:00" required></div>
+        </div>
+        <button class="glass-btn glass-btn-primary" type="submit" style="width:100%; margin-top:10px;">Reserve Scanner Slot</button>
+      </form>
+    </div>
+  `;
+};
+
+window.saveRadioSchedule = function() {
+  const pId = document.getElementById('rs-pat').value.trim();
+  const modality = document.getElementById('rs-modality').value;
+  const region = document.getElementById('rs-region').value.trim();
+  const date = document.getElementById('rs-date').value;
+  const time = document.getElementById('rs-time').value;
+  
+  const pat = STATE.patients.find(pt => pt.id === pId);
+  if (!pat) {
+    showToast("Invalid Patient ID", "error");
+    return;
+  }
+  
+  const newStudy = {
+    id: `IMG-${Date.now().toString().slice(-4)}`,
+    patientId: pId,
+    type: 'Radiology',
+    testName: `${modality}: ${region}`,
+    status: 'Pending',
+    parameter: region,
+    value: 'Awaiting imaging scan...',
+    timestamp: `${date}T${time}:00.000Z`
+  };
+  
+  convex.mutation(api.db.upsertInvestigation, newStudy).then(() => {
+    showToast(`Imaging Scan Scheduled: ${newStudy.id}`);
+    logAudit('Create', newStudy.id, `Scheduled ${modality} for ${pId}`);
+    STATE.activePanel = 'radiology-queue';
+    navigateToPanel('radiology-queue');
+  });
+};
+
+window.renderRadiologyTAT = function() {
+  const container = document.getElementById('radiology-tat');
+  if (!container) return;
+  
+  container.innerHTML = `
+    <h3 class="form-title">Modality Performance (TAT Monitor)</h3>
+    <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); margin-top:15px;">
+      <div class="glass-card" style="text-align:center; padding:10px;"><strong style="font-size:0.75rem;">MRI TAT</strong><div style="font-size:1.4rem; font-weight:700; color:var(--primary); margin-top:4px;">55 Min</div></div>
+      <div class="glass-card" style="text-align:center; padding:10px;"><strong style="font-size:0.75rem;">CT TAT</strong><div style="font-size:1.4rem; font-weight:700; color:var(--primary); margin-top:4px;">40 Min</div></div>
+      <div class="glass-card" style="text-align:center; padding:10px;"><strong style="font-size:0.75rem;">X-Ray TAT</strong><div style="font-size:1.4rem; font-weight:700; color:var(--primary); margin-top:4px;">20 Min</div></div>
+      <div class="glass-card" style="text-align:center; padding:10px;"><strong style="font-size:0.75rem;">USG TAT</strong><div style="font-size:1.4rem; font-weight:700; color:var(--primary); margin-top:4px;">30 Min</div></div>
+    </div>
+  `;
+};
+
+// --- EXTRA PHARMACY SUB PANELS ---
+window.renderPharmacyInventory = function() {
+  const container = document.getElementById('pharmacy-inventory');
+  if (!container) return;
+  
+  const list = STATE.pharmacyInventory || [];
+  let rows = list.map(d => {
+    let stat = 'status-done';
+    if (d.status === 'Low') stat = 'status-pending';
+    if (d.status === 'Critical') stat = 'status-canceled';
+    return `
+      <tr>
+        <td class="text-bold">${d.name}</td>
+        <td>${d.stock}</td>
+        <td><code>${d.batch}</code></td>
+        <td>${d.expiry}</td>
+        <td><span class="status-indicator ${stat}">${d.status}</span></td>
+      </tr>
+    `;
+  }).join('');
+  
+  container.innerHTML = `
+    <div class="workspace-grid" style="grid-template-columns:1fr 1.8fr; gap:16px;">
+      <div class="glass-card">
+        <h3 class="form-title">Stock In / Purchase Registry</h3>
+        <form onsubmit="event.preventDefault(); saveInventoryReceipt()">
+          <div class="form-group"><label>Drug Description *</label><input type="text" id="ph-rec-name" placeholder="Paracetamol 650mg" required></div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="form-group"><label>Batch *</label><input type="text" id="ph-rec-batch" placeholder="B102" required></div>
+            <div class="form-group"><label>Units Received *</label><input type="number" id="ph-rec-qty" placeholder="1000" required></div>
+          </div>
+          <div class="form-group"><label>Expiry Date *</label><input type="date" id="ph-rec-exp" value="${new Date(Date.now() + 365*24*3600*1000).toISOString().split('T')[0]}" required></div>
+          <button class="glass-btn glass-btn-primary" type="submit">Record GRN Receipt</button>
+        </form>
+      </div>
+      <div class="glass-card">
+        <h3 class="form-title">Active Pharmacy Stock Ledger</h3>
+        <div class="table-wrapper">
+          <table class="ehr-table">
+            <thead>
+              <tr><th>Drug Description</th><th>Stock Units</th><th>Batch</th><th>Expiry</th><th>Status</th></tr>
+            </thead>
+            <tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:var(--text-3)">Inventory ledger empty.</td></tr>'}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+window.saveInventoryReceipt = function() {
+  const name = document.getElementById('ph-rec-name').value.trim();
+  const batch = document.getElementById('ph-rec-batch').value.trim();
+  const qty = parseInt(document.getElementById('ph-rec-qty').value);
+  const exp = document.getElementById('ph-rec-exp').value;
+  
+  let drug = STATE.pharmacyInventory.find(di => di.name.toLowerCase() === name.toLowerCase());
+  
+  if (drug) {
+    drug.stock += qty;
+    drug.batch = batch;
+    drug.expiry = exp;
+    drug.status = drug.stock >= drug.reorderLevel ? 'OK' : 'Low';
+  } else {
+    drug = {
+      id: `DRG-${Date.now().toString().slice(-4)}`,
+      name, stock: qty, batch, expiry: exp, reorderLevel: 200, status: 'OK', category: 'General'
+    };
+  }
+  
+  convex.mutation(api.db.upsertPharmacyInventory, drug).then(() => {
+    showToast("GRN Stock entry processed successfully.");
+    logAudit('Edit', drug.id, `Stock Receipt: Added ${qty} units of ${name}`);
+    window.renderPharmacyInventory();
+  });
+};
+
+window.renderPharmacyExpiry = function() {
+  const container = document.getElementById('pharmacy-expiry');
+  if (!container) return;
+  
+  const list = STATE.pharmacyInventory || [];
+  const nearExpiry = list.filter(d => {
+    const diff = new Date(d.expiry) - new Date();
+    const days = diff / (24*3600*1000);
+    return days <= 90;
+  });
+  
+  let cards = nearExpiry.map(d => `
+    <div style="background:var(--danger-bg); border:1px solid var(--danger); padding:10px; border-radius:8px; margin-bottom:8px; font-size:0.75rem;">
+      <div class="flex-between"><strong>${d.name}</strong> <span class="status-indicator status-canceled">Expiring Soon</span></div>
+      <div style="margin-top:4px;">Batch: ${d.batch} | Stock: ${d.stock} Units | Expiry: <strong>${d.expiry}</strong></div>
+    </div>
+  `).join('');
+  
+  container.innerHTML = `
+    <h3 class="form-title">Expiry Warnings (90 Days Threshold)</h3>
+    <div style="max-height:400px; overflow-y:auto; margin-top:12px;">
+      ${cards || '<p style="color:var(--success); font-weight:600; text-align:center; padding:30px;">✓ No stock lines expiring within 90 days.</p>'}
+    </div>
+  `;
+};
+
+window.renderPharmacyPO = function() {
+  const container = document.getElementById('pharmacy-po');
+  if (!container) return;
+  
+  container.innerHTML = `
+    <div class="glass-card" style="max-width:550px; margin:auto;">
+      <h3 class="form-title">Purchase Order Generator</h3>
+      <form onsubmit="event.preventDefault(); generatePO()">
+        <div class="form-group"><label>Supplier Name *</label><input type="text" id="po-supplier" placeholder="Aurobindo Pharma" required></div>
+        <div class="form-group"><label>Drug Details & Quantity *</label><input type="text" id="po-drug" placeholder="Paracetamol 650mg (5000 Tab)" required></div>
+        <button class="glass-btn glass-btn-primary" type="submit" style="width:100%;">Dispatch Purchase Order</button>
+      </form>
+    </div>
+  `;
+};
+
+window.generatePO = function() {
+  const supplier = document.getElementById('po-supplier').value;
+  const drug = document.getElementById('po-drug').value;
+  
+  showToast(`PO generated & sent to ${supplier}`);
+  logAudit('Create', 'SYS', `Dispatched PO for ${drug} to ${supplier}`);
+  document.getElementById('po-supplier').value = '';
+  document.getElementById('po-drug').value = '';
+};
+
+// --- EXTRA FINANCE SUB PANELS ---
+window.renderFinancePaid = function() {
+  const container = document.getElementById('finance-paid');
+  if (!container) return;
+  
+  const paid = STATE.billingInvoices.filter(inv => inv.status === 'Paid');
+  let list = paid.map(inv => `
+    <div class="records-list-item">
+      <div class="flex-between"><strong>Invoice: ${inv.id}</strong> <span>Paid: ₹${inv.total}</span></div>
+      <div style="font-size:0.75rem; color:var(--text-2); margin-top:4px;">Patient: ${inv.patientId} | Mode: ${inv.paymentMode || 'UPI'}</div>
+    </div>
+  `).join('');
+  
+  container.innerHTML = `
+    <h3 class="form-title">Settled Invoices Archive</h3>
+    <div style="max-height: 400px; overflow-y: auto; margin-top:12px;">
+      ${list || '<p style="color:var(--text-3); text-align:center;">No settled invoices.</p>'}
+    </div>
+  `;
+};
+
+window.renderFinanceDaily = function() {
+  const container = document.getElementById('finance-daily');
+  if (!container) return;
+  
+  const settled = STATE.billingInvoices.filter(inv => inv.status === 'Paid');
+  let totals = { Cash: 0, Card: 0, UPI: 0, Insurance: 0 };
+  
+  settled.forEach(inv => {
+    const m = inv.paymentMode || 'Cash';
+    if (m.includes('UPI')) totals.UPI += inv.total;
+    else if (m.includes('Card')) totals.Card += inv.total;
+    else if (m.includes('Insurance')) totals.Insurance += inv.total;
+    else totals.Cash += inv.total;
+  });
+  
+  container.innerHTML = `
+    <h3 class="form-title">Daily Collection Settlement Summary</h3>
+    <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); margin-top:15px;">
+      <div class="glass-card" style="padding:12px; text-align:center;"><strong>Cash Settlement</strong><div style="font-size:1.4rem; font-weight:700; color:var(--success); margin-top:6px;">₹${totals.Cash}</div></div>
+      <div class="glass-card" style="padding:12px; text-align:center;"><strong>UPI QR Settlement</strong><div style="font-size:1.4rem; font-weight:700; color:var(--success); margin-top:6px;">₹${totals.UPI}</div></div>
+      <div class="glass-card" style="padding:12px; text-align:center;"><strong>Card Settlement</strong><div style="font-size:1.4rem; font-weight:700; color:var(--success); margin-top:6px;">₹${totals.Card}</div></div>
+      <div class="glass-card" style="padding:12px; text-align:center;"><strong>TPA Pre-Auth Settle</strong><div style="font-size:1.4rem; font-weight:700; color:var(--success); margin-top:6px;">₹${totals.Insurance}</div></div>
+    </div>
+  `;
+};
+
+window.renderFinanceAnalytics = function() {
+  const container = document.getElementById('finance-analytics');
+  if (!container) return;
+  
+  let totalRev = STATE.billingInvoices.filter(i=>i.status==='Paid').reduce((acc, curr)=>acc+curr.total, 0);
+  
+  container.innerHTML = `
+    <h3 class="form-title">Real-Time Financial Collections</h3>
+    <div class="stats-grid" style="grid-template-columns: 1fr; margin-top:12px;">
+      <div class="glass-card" style="padding:15px; text-align:center;">
+        <strong>Total Consolidated Revenue</strong>
+        <div style="font-size:2rem; font-weight:700; color:var(--primary); margin-top:8px;">₹${totalRev}</div>
+      </div>
+    </div>
+  `;
+};
+
+window.renderFinanceOutstanding = function() {
+  const container = document.getElementById('finance-outstanding');
+  if (!container) return;
+  
+  const unpaid = STATE.billingInvoices.filter(i => i.status === 'Unsettled');
+  let list = unpaid.map(i => `
+    <div style="background:var(--danger-bg); border:1px solid var(--danger); padding:10px; border-radius:8px; margin-bottom:8px; font-size:0.75rem;">
+      <div class="flex-between"><strong>Invoice: ${i.id}</strong> <span class="status-indicator status-canceled">Unsettled</span></div>
+      <div style="margin-top:4px;">Patient ID: ${i.patientId} | Balance Due: <strong>₹${i.total}</strong></div>
+    </div>
+  `).join('');
+  
+  container.innerHTML = `
+    <h3 class="form-title">Outstanding Aging Reports (Unpaid Ledger)</h3>
+    <div style="max-height: 400px; overflow-y: auto; margin-top:12px;">
+      ${list || '<p style="color:var(--success); font-weight:600; text-align:center; padding:30px;">✓ All invoices settled.</p>'}
+    </div>
+  `;
+};
+
+window.renderAdminDashboardStats = function() {
+  const staffCount = STAFF_ACCOUNTS.length;
+  const patientCount = STATE.patients.length;
+  const deviceCount = STATE.devices.length;
+  const openComplaints = STATE.complaints.filter(c => c.status === 'Open').length;
+  
+  const elStaff = document.getElementById('admin-stat-staff');
+  const elPatients = document.getElementById('admin-stat-patients');
+  const elDevices = document.getElementById('admin-stat-devices');
+  const elComplaints = document.getElementById('admin-stat-complaints');
+  
+  if (elStaff) elStaff.textContent = staffCount;
+  if (elPatients) elPatients.textContent = patientCount;
+  if (elDevices) elDevices.textContent = deviceCount;
+  if (elComplaints) elComplaints.textContent = openComplaints;
+};
 

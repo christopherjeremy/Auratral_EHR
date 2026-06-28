@@ -80,6 +80,12 @@
           <option value="pharmacy">Pharmacy</option>
           <option value="finance">Finance & Billing</option>
           <option value="patient">Patient Portal</option>
+          <option value="emergency">Emergency / Trauma</option>
+          <option value="icu">ICU Management</option>
+          <option value="ot">Operation Theatre</option>
+          <option value="bloodbank">Blood Bank</option>
+          <option value="diet">Diet & Nutrition</option>
+          <option value="transport">Ambulance & Transport</option>
         </select>
       </div>
       <div class="user-profile-widget">
@@ -92,16 +98,25 @@
     </div>
   </nav>
 
-  <!-- ========== MAIN CONTENT ========== -->
-  <div class="main-content" id="main-content" style="display:none">
-    <div class="page-header">
+  <!-- ========== APP LAYOUT ========== -->
+  <div class="app-layout" id="app-layout" style="display:none">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <ul class="sidebar-nav-menu" id="sidebar-nav-menu"></ul>
+    </aside>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <div class="main-content" id="main-content">
+      <div class="page-header">
       <h1 class="page-title" id="current-panel-title">Dashboard</h1>
       <p class="page-subtitle" id="current-panel-subtitle">Overview</p>
     </div>
 
     <!-- ====== 1. SUPER ADMIN PANEL ====== -->
     <div class="role-panel" id="role-panel-admin" style="display:none">
-      <!-- Stats Row -->
+      <!-- Sub-panel: Admin Dashboard -->
+      <div class="sub-panel" id="admin-dashboard">
+        <!-- Stats Row -->
       <div class="stats-grid">
         <div class="glass-card stat-card" onclick="showStatDetail('patients')">
           <div class="stat-details"><span class="stat-label">Patients</span><span class="stat-val" id="admin-stat-patients">0</span><span class="stat-change">Registered</span></div>
@@ -227,6 +242,7 @@
         </div>
         <div class="audit-logs-container" id="audit-logs-viewport"></div>
       </div>
+      </div> <!-- Close sub-panel admin-dashboard -->
     </div>
 
     <!-- ====== SYSTEM SETTINGS PAGE ====== -->
@@ -291,7 +307,9 @@
 
     <!-- ====== 2. RECEPTION PANEL ====== -->
     <div class="role-panel" id="role-panel-reception" style="display:none">
-      <div class="workspace-grid">
+      <!-- Sub-panel: Register Patient -->
+      <div class="sub-panel" id="reception-register">
+        <div class="workspace-grid">
         <div style="display:flex;flex-direction:column;gap:14px">
           <!-- Registration Form -->
           <div class="glass-card">
@@ -366,11 +384,14 @@
           </div>
         </div>
       </div>
+      </div> <!-- Close sub-panel reception-register -->
     </div>
 
     <!-- ====== 3. NURSING PANEL ====== -->
     <div class="role-panel" id="role-panel-nursing" style="display:none">
-      <div class="workspace-grid">
+      <!-- Sub-panel: Nursing Queue -->
+      <div class="sub-panel" id="nursing-queue">
+        <div class="workspace-grid">
         <div class="glass-card">
           <h3 class="form-title">Patient Queue</h3>
           <div style="font-size:.68rem;color:var(--text-3);margin-bottom:8px">New check-ins & patients returning with results</div>
@@ -412,11 +433,14 @@
           </div>
         </div>
       </div>
+      </div> <!-- Close sub-panel nursing-queue -->
     </div>
 
     <!-- ====== 4. DOCTOR PANEL ====== -->
     <div class="role-panel" id="role-panel-doctor" style="display:none">
-      <div class="workspace-grid">
+      <!-- Sub-panel: Doctor Queue -->
+      <div class="sub-panel" id="doctor-queue">
+        <div class="workspace-grid">
         <div class="glass-card">
           <h3 class="form-title">Consultation Queue</h3>
           <div class="records-list" id="doctor-patient-list"></div>
@@ -506,11 +530,14 @@
         </div>
         <div class="glass-card" id="doctor-empty-state" style="display:flex;align-items:center;justify-content:center;min-height:200px"><p style="color:var(--text-2);text-align:center;font-size:.78rem">Select a patient from the queue.</p></div>
       </div>
+      </div> <!-- Close sub-panel doctor-queue -->
     </div>
 
     <!-- ====== 5. LAB PANEL ====== -->
     <div class="role-panel" id="role-panel-lab" style="display:none">
-      <div class="workspace-grid">
+      <!-- Sub-panel: Lab Pending -->
+      <div class="sub-panel" id="lab-pending">
+        <div class="workspace-grid">
         <div class="glass-card">
           <h3 class="form-title">Pending Lab Tests</h3>
           <div class="records-list" id="lab-pending-list"></div>
@@ -552,11 +579,14 @@
           </div>
         </div>
       </div>
+      </div> <!-- Close sub-panel lab-pending -->
     </div>
 
     <!-- ====== 6. RADIOLOGY PANEL ====== -->
     <div class="role-panel" id="role-panel-radiology" style="display:none">
-      <div class="workspace-grid">
+      <!-- Sub-panel: Radiology Queue -->
+      <div class="sub-panel" id="radiology-queue">
+        <div class="workspace-grid">
         <div class="glass-card"><h3 class="form-title">Imaging Queue</h3><div class="records-list" id="radiology-pending-list"></div></div>
         <div style="display:flex;flex-direction:column;gap:14px">
           <div class="glass-card" id="radiology-workspace" style="display:none">
@@ -585,11 +615,14 @@
           <div class="glass-card" id="radiology-empty-state" style="display:flex;align-items:center;justify-content:center;min-height:200px"><p style="color:var(--text-2);text-align:center;font-size:.78rem">Select a scan from the queue.</p></div>
         </div>
       </div>
+      </div> <!-- Close sub-panel radiology-queue -->
     </div>
 
     <!-- ====== 7. PHARMACY PANEL ====== -->
     <div class="role-panel" id="role-panel-pharmacy" style="display:none">
-      <div class="workspace-grid">
+      <!-- Sub-panel: Pharmacy Queue -->
+      <div class="sub-panel" id="pharmacy-queue">
+        <div class="workspace-grid">
         <div class="glass-card"><h3 class="form-title">Prescription Queue</h3><div class="records-list" id="pharmacy-pending-list"></div></div>
         <div style="display:flex;flex-direction:column;gap:14px">
           <div class="glass-card" id="pharmacy-workspace" style="display:none">
@@ -615,11 +648,14 @@
           </div>
         </div>
       </div>
+      </div> <!-- Close sub-panel pharmacy-queue -->
     </div>
 
     <!-- ====== 8. FINANCE PANEL ====== -->
     <div class="role-panel" id="role-panel-finance" style="display:none">
-      <div class="revenue-cards" id="finance-revenue-cards">
+      <!-- Sub-panel: Finance Pending -->
+      <div class="sub-panel" id="finance-pending">
+        <div class="revenue-cards" id="finance-revenue-cards">
         <div class="glass-card revenue-card" style="border-left:4px solid var(--success)"><div class="rev-amount" style="color:var(--success)">₹12,450</div><div class="rev-label">Today</div></div>
         <div class="glass-card revenue-card" style="border-left:4px solid var(--info)"><div class="rev-amount" style="color:var(--info)">₹78,300</div><div class="rev-label">This Week</div></div>
         <div class="glass-card revenue-card" style="border-left:4px solid var(--primary)"><div class="rev-amount" style="color:var(--primary)">₹3,24,500</div><div class="rev-label">This Month</div></div>
@@ -662,11 +698,14 @@
           </div>
         </div>
       </div>
+      </div> <!-- Close sub-panel finance-pending -->
     </div>
 
     <!-- ====== 9. PATIENT PORTAL ====== -->
     <div class="role-panel" id="role-panel-patient" style="display:none">
-      <div class="patient-portal-wrapper">
+      <!-- Sub-panel: Patient Mobile -->
+      <div class="sub-panel" id="patient-mobile">
+        <div class="patient-portal-wrapper">
         <div class="smartphone-frame">
           <div class="phone-notch"><div class="phone-speaker"></div><div class="phone-camera"></div></div>
           <div class="phone-screen" id="phone-screen-viewport">
@@ -674,7 +713,206 @@
           </div>
         </div>
       </div>
+      </div> <!-- Close sub-panel patient-mobile -->
     </div>
+
+<!-- RECEPTION SUB PANELS -->
+<div class="sub-panel" id="reception-calendar" style="display:none"></div>
+<div class="sub-panel" id="reception-queue-monitor" style="display:none"></div>
+
+<!-- NURSING SUB PANELS -->
+<div class="sub-panel" id="nursing-mar" style="display:none"></div>
+<div class="sub-panel" id="nursing-io" style="display:none"></div>
+<div class="sub-panel" id="nursing-careplans" style="display:none"></div>
+<div class="sub-panel" id="nursing-handover" style="display:none"></div>
+<div class="sub-panel" id="nursing-bedmgmt" style="display:none"></div>
+
+<!-- DOCTOR SUB PANELS -->
+<div class="sub-panel" id="doctor-ipd" style="display:none"></div>
+<div class="sub-panel" id="doctor-discharge" style="display:none"></div>
+<div class="sub-panel" id="doctor-templates" style="display:none"></div>
+
+<!-- LAB SUB PANELS -->
+<div class="sub-panel" id="lab-completed" style="display:none"></div>
+<div class="sub-panel" id="lab-tracker" style="display:none"></div>
+<div class="sub-panel" id="lab-qc" style="display:none"></div>
+<div class="sub-panel" id="lab-reagents" style="display:none"></div>
+
+<!-- RADIOLOGY SUB PANELS -->
+<div class="sub-panel" id="radiology-completed" style="display:none"></div>
+<div class="sub-panel" id="radiology-schedule" style="display:none"></div>
+<div class="sub-panel" id="radiology-tat" style="display:none"></div>
+
+<!-- PHARMACY SUB PANELS -->
+<div class="sub-panel" id="pharmacy-inventory" style="display:none"></div>
+<div class="sub-panel" id="pharmacy-expiry" style="display:none"></div>
+<div class="sub-panel" id="pharmacy-po" style="display:none"></div>
+
+<!-- FINANCE SUB PANELS -->
+<div class="sub-panel" id="finance-paid" style="display:none"></div>
+<div class="sub-panel" id="finance-daily" style="display:none"></div>
+<div class="sub-panel" id="finance-analytics" style="display:none"></div>
+<div class="sub-panel" id="finance-outstanding" style="display:none"></div>
+
+<!-- ====== 10. EMERGENCY PANEL ====== -->
+<div class="role-panel" id="role-panel-emergency" style="display:none">
+  <!-- Sub-panel: Triage Board -->
+  <div class="sub-panel" id="emergency-triage">
+    <div class="triage-board-grid">
+      <div class="triage-col red" id="triage-red">
+        <div class="triage-col-header">Immediate (P1)</div>
+        <div class="triage-list" id="triage-list-red"></div>
+      </div>
+      <div class="triage-col orange" id="triage-orange">
+        <div class="triage-col-header">Very Urgent (P2)</div>
+        <div class="triage-list" id="triage-list-orange"></div>
+      </div>
+      <div class="triage-col yellow" id="triage-yellow">
+        <div class="triage-col-header">Urgent (P3)</div>
+        <div class="triage-list" id="triage-list-yellow"></div>
+      </div>
+      <div class="triage-col green" id="triage-green">
+        <div class="triage-col-header">Standard (P4)</div>
+        <div class="triage-list" id="triage-list-green"></div>
+      </div>
+      <div class="triage-col blue" id="triage-blue">
+        <div class="triage-col-header">Non-Urgent (P5)</div>
+        <div class="triage-list" id="triage-list-blue"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sub-panel: Quick Registration -->
+  <div class="sub-panel" id="emergency-quickreg" style="display:none">
+    <div class="glass-card" style="max-width: 500px; margin: auto;">
+      <h3 class="form-title">ER Quick Triage Registration</h3>
+      <form onsubmit="event.preventDefault(); saveERQuickRegistration()">
+        <div class="form-group"><label>Patient Name *</label><input type="text" id="er-q-name" placeholder="Unknown Male / Jane Doe" required></div>
+        <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:10px;">
+          <div class="form-group"><label>Age / Est. Age</label><input type="number" id="er-q-age" placeholder="35"></div>
+          <div class="form-group"><label>Gender</label><select id="er-q-gender"><option>Male</option><option>Female</option><option>Other</option></select></div>
+        </div>
+        <div class="form-group"><label>Chief Complaint *</label><input type="text" id="er-q-complaint" placeholder="Chest pain, trauma, RTA" required></div>
+        <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:10px;">
+          <div class="form-group"><label>Brought By *</label><input type="text" id="er-q-broughtby" placeholder="Ambulance / Police / Self" required></div>
+          <div class="form-group">
+            <label>Acuity Category *</label>
+            <select id="er-q-triage" required>
+              <option value="Red">Red (P1 - Resus)</option>
+              <option value="Orange">Orange (P2 - Critical)</option>
+              <option value="Yellow">Yellow (P3 - Urgent)</option>
+              <option value="Green">Green (P4 - Minor)</option>
+              <option value="Blue">Blue (P5 - Waiting)</option>
+            </select>
+          </div>
+        </div>
+        <button class="glass-btn glass-btn-primary" style="width:100%; margin-top:10px;" type="submit">Onboard to Triage</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Sub-panel: Resuscitation Zone -->
+  <div class="sub-panel" id="emergency-resus" style="display:none"></div>
+
+  <!-- Sub-panel: ER Bed Status -->
+  <div class="sub-panel" id="emergency-beds" style="display:none"></div>
+
+  <!-- Sub-panel: MLC Register -->
+  <div class="sub-panel" id="emergency-mlc" style="display:none"></div>
+
+  <!-- Sub-panel: ER Shift Handover -->
+  <div class="sub-panel" id="emergency-handover" style="display:none"></div>
+</div>
+
+<!-- ====== 11. ICU PANEL ====== -->
+<div class="role-panel" id="role-panel-icu" style="display:none">
+  <!-- Sub-panel: ICU Bed Map -->
+  <div class="sub-panel" id="icu-overview"></div>
+
+  <!-- Sub-panel: Patient Monitor -->
+  <div class="sub-panel" id="icu-monitor" style="display:none"></div>
+
+  <!-- Sub-panel: Daily Rounds -->
+  <div class="sub-panel" id="icu-rounds" style="display:none"></div>
+
+  <!-- Sub-panel: Procedure Log -->
+  <div class="sub-panel" id="icu-procedures" style="display:none"></div>
+
+  <!-- Sub-panel: Scoring & Alerts -->
+  <div class="sub-panel" id="icu-alerts" style="display:none"></div>
+</div>
+
+<!-- ====== 12. OPERATION THEATRE ====== -->
+<div class="role-panel" id="role-panel-ot" style="display:none">
+  <!-- Sub-panel: Schedule Board -->
+  <div class="sub-panel" id="ot-schedule"></div>
+
+  <!-- Sub-panel: Book Surgery -->
+  <div class="sub-panel" id="ot-booking" style="display:none"></div>
+
+  <!-- Sub-panel: Pre-Op Checklist -->
+  <div class="sub-panel" id="ot-checklist" style="display:none"></div>
+
+  <!-- Sub-panel: PAC -->
+  <div class="sub-panel" id="ot-pac" style="display:none"></div>
+
+  <!-- Sub-panel: Intra-Op -->
+  <div class="sub-panel" id="ot-intra" style="display:none"></div>
+
+  <!-- Sub-panel: Post-Op Recovery -->
+  <div class="sub-panel" id="ot-recovery" style="display:none"></div>
+
+  <!-- Sub-panel: OT Analytics -->
+  <div class="sub-panel" id="ot-analytics" style="display:none"></div>
+</div>
+
+<!-- ====== 13. BLOOD BANK ====== -->
+<div class="role-panel" id="role-panel-bloodbank" style="display:none">
+  <!-- Sub-panel: Blood Stock -->
+  <div class="sub-panel" id="bloodbank-stock"></div>
+
+  <!-- Sub-panel: Donor Register -->
+  <div class="sub-panel" id="bloodbank-donor" style="display:none"></div>
+
+  <!-- Sub-panel: Donation Record -->
+  <div class="sub-panel" id="bloodbank-donation" style="display:none"></div>
+
+  <!-- Sub-panel: Cross-Match -->
+  <div class="sub-panel" id="bloodbank-crossmatch" style="display:none"></div>
+
+  <!-- Sub-panel: Issue / Return -->
+  <div class="sub-panel" id="bloodbank-issue" style="display:none"></div>
+</div>
+
+<!-- ====== 14. DIET / NUTRITION ====== -->
+<div class="role-panel" id="role-panel-diet" style="display:none">
+  <!-- Sub-panel: Kitchen Summary -->
+  <div class="sub-panel" id="diet-kitchen"></div>
+
+  <!-- Sub-panel: Diet Orders -->
+  <div class="sub-panel" id="diet-orders" style="display:none"></div>
+
+  <!-- Sub-panel: Nutrition Screening -->
+  <div class="sub-panel" id="diet-screening" style="display:none"></div>
+
+  <!-- Sub-panel: Meal Tracker -->
+  <div class="sub-panel" id="diet-tracker" style="display:none"></div>
+</div>
+
+<!-- ====== 15. AMBULANCE / TRANSPORT ====== -->
+<div class="role-panel" id="role-panel-transport" style="display:none">
+  <!-- Sub-panel: Dispatch -->
+  <div class="sub-panel" id="transport-dispatch"></div>
+
+  <!-- Sub-panel: Fleet Status -->
+  <div class="sub-panel" id="transport-fleet" style="display:none"></div>
+
+  <!-- Sub-panel: Trip Log -->
+  <div class="sub-panel" id="transport-trips" style="display:none"></div>
+
+  <!-- Sub-panel: Vehicle Management -->
+  <div class="sub-panel" id="transport-vehicles" style="display:none"></div>
+</div>
 
   </div><!-- /main-content -->
 
