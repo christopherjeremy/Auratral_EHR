@@ -796,3 +796,16 @@ svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; 
     padding: 0 !important;
   }
 }
+
+.nursing-workspace-grid {
+  display: grid;
+  grid-template-columns: 260px 1fr 300px;
+  gap: 14px;
+  align-items: stretch;
+}
+@media (max-width: 1024px) {
+  .nursing-workspace-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

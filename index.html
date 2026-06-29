@@ -518,6 +518,16 @@
                 </div>
               </div>
             </div>
+            <!-- Clinical Admissions / Bookings -->
+            <div style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:12px">
+              <label style="color:var(--primary);font-size:.78rem;font-weight:600;display:block;margin-bottom:8px">Clinical Routing</label>
+              <div style="display:flex;gap:8px">
+                <button class="glass-btn glass-btn-secondary" style="flex:1;font-size:0.7rem;padding:6px 4px;" onclick="openDoctorWardAdmission()">Admit to Ward</button>
+                <button class="glass-btn glass-btn-secondary" style="flex:1;font-size:0.7rem;padding:6px 4px;" onclick="openDoctorIcuAdmission()">Book ICU Bed</button>
+                <button class="glass-btn glass-btn-secondary" style="flex:1;font-size:0.7rem;padding:6px 4px;" onclick="openDoctorOtSchedule()">Book Surgery/OT</button>
+              </div>
+            </div>
+
             <!-- Actions -->
             <div class="flex-between" style="border-top:1px solid var(--border);padding-top:10px">
               <button class="glass-btn glass-btn-secondary" id="btn-doc-upload-file"><svg viewBox="0 0 24 24" style="width:13px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>Upload File</button>
@@ -1034,6 +1044,42 @@
         <button class="glass-overlay-close" onclick="closeComplaintDetail()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
       </div>
       <div class="glass-overlay-body" id="complaint-detail-body"><!-- JS --></div>
+    </div>
+  </div>
+
+  <!-- Bed Management Modal -->
+  <div class="modal-overlay" id="modal-bed-management">
+    <div class="modal-box" style="max-width:480px">
+      <div class="modal-header"><h3 class="modal-title" id="bed-mgmt-title">Bed Management</h3><button class="modal-close-btn" onclick="document.getElementById('modal-bed-management').classList.remove('open')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+      <div class="modal-body" id="bed-mgmt-body"></div>
+      <div class="modal-footer"><button class="glass-btn glass-btn-secondary" onclick="document.getElementById('modal-bed-management').classList.remove('open')">Close</button></div>
+    </div>
+  </div>
+
+  <!-- Doctor Ward Admission Modal -->
+  <div class="modal-overlay" id="modal-doctor-ward">
+    <div class="modal-box" style="max-width:450px">
+      <div class="modal-header"><h3 class="modal-title">Ward Bed Assignment</h3><button class="modal-close-btn" onclick="document.getElementById('modal-doctor-ward').classList.remove('open')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+      <div class="modal-body" id="doctor-ward-body"></div>
+      <div class="modal-footer"><button class="glass-btn glass-btn-secondary" onclick="document.getElementById('modal-doctor-ward').classList.remove('open')">Close</button></div>
+    </div>
+  </div>
+
+  <!-- Doctor ICU Admission Modal -->
+  <div class="modal-overlay" id="modal-doctor-icu">
+    <div class="modal-box" style="max-width:450px">
+      <div class="modal-header"><h3 class="modal-title">Book ICU Bed</h3><button class="modal-close-btn" onclick="document.getElementById('modal-doctor-icu').classList.remove('open')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+      <div class="modal-body" id="doctor-icu-body"></div>
+      <div class="modal-footer"><button class="glass-btn glass-btn-secondary" onclick="document.getElementById('modal-doctor-icu').classList.remove('open')">Close</button></div>
+    </div>
+  </div>
+
+  <!-- Doctor OT Booking Modal -->
+  <div class="modal-overlay" id="modal-doctor-ot">
+    <div class="modal-box" style="max-width:500px">
+      <div class="modal-header"><h3 class="modal-title">Schedule OT/Surgery</h3><button class="modal-close-btn" onclick="document.getElementById('modal-doctor-ot').classList.remove('open')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+      <div class="modal-body" id="doctor-ot-body"></div>
+      <div class="modal-footer"><button class="glass-btn glass-btn-secondary" onclick="document.getElementById('modal-doctor-ot').classList.remove('open')">Cancel</button></div>
     </div>
   </div>
 

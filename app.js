@@ -705,14 +705,14 @@ window.bootstrapDatabase = async function() {
     const seedAppointments = Array.from({ length: 10 }, (_, i) => ({
       id: `APT-${String(i+1).padStart(3, '0')}`,
       patientId: `AURA-2026-${String((i % 10) + 1).padStart(4, '0')}`,
-      doctorId: `DOC00${(i % 4) + 1}`,
-      department: ['Cardiology', 'General Medicine', 'Orthopedics', 'Pediatrics'][i % 4],
-      date: new Date(Date.now() + (i - 2) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      doctorId: `doc002`, // Lowercase doc002 (Dr. Ananya Sharma)
+      department: 'General Medicine',
+      date: new Date().toISOString().split('T')[0],
       time: `${9 + (i % 8)}:00`,
-      type: ['New Consultation', 'Follow-up', 'Emergency', 'Routine Checkup'][i % 4],
-      status: ['Booked', 'Completed', 'Cancelled', 'Admitted'][i % 4],
-      token: (i % 3) + 1,
-      investigationStatus: ['None', 'Ordered', 'Reported'][i % 3],
+      type: ['New Consultation', 'Follow-up', 'Routine Checkup'][i % 3],
+      status: 'In Consultation', // Set active in Consultation queue
+      token: i + 1,
+      investigationStatus: 'None',
       timestamp: new Date().toISOString()
     }));
     for (const a of seedAppointments) {
@@ -982,8 +982,8 @@ window.bootstrapDatabase = async function() {
       gst: Math.round([500, 1200, 850, 1500, 1500][i % 5] * 0.05),
       insuranceCover: i % 3 === 0 ? 300 : 0,
       total: Math.round([500, 1200, 850, 1500, 1500][i % 5] * 1.05) - (i % 3 === 0 ? 300 : 0),
-      status: ['Paid', 'Unsettled', 'Pending'][i % 3],
-      paymentMode: i % 3 === 0 ? ['Cash', 'UPI / QR Code', 'Debit/Credit Card'][i % 3] : 'Cash',
+      status: 'Pending',
+      paymentMode: 'Cash',
       date: new Date(Date.now() - i * 24 * 3600 * 1000).toISOString()
     }));
     for (const b of seedBillingInvoices) {
@@ -1025,6 +1025,49 @@ window.bootstrapDatabase = async function() {
     ];
     for (const lr of seedLabReagents) {
       await setDoc(doc(db, "labReagents", lr.id), lr);
+    }
+    // Seed investigations (10 Lab tests, 10 Radiology scans, 10 Prescriptions)
+    const seedInvestigations = [];
+    for (let i = 0; i < 10; i++) {
+      // 10 Lab
+      seedInvestigations.push({
+        id: `INV-LAB-${String(i+1).padStart(3, '0')}`,
+        patientId: `AURA-2026-${String((i % 10) + 1).padStart(4, '0')}`,
+        testName: ['Fasting Blood Sugar', 'HbA1c', 'Complete Blood Count', 'Lipid Profile', 'Liver Function Test', 'Kidney Function Test', 'Thyroid Profile', 'Urine Routine', 'Serum Electrolytes', 'Blood Grouping'][i],
+        type: 'Lab',
+        status: 'Pending',
+        doctorName: 'Dr. Ananya Sharma',
+        date: new Date().toISOString().split('T')[0],
+        timestamp: new Date().toISOString()
+      });
+      // 10 Radiology
+      seedInvestigations.push({
+        id: `INV-RAD-${String(i+1).padStart(3, '0')}`,
+        patientId: `AURA-2026-${String((i % 10) + 1).padStart(4, '0')}`,
+        testName: ['Chest X-Ray PA View', 'Ultrasound Abdomen & Pelvis', 'CT Brain (Plain)', 'MRI Spine (Cervical)', 'ECG 12-Lead', '2D Echo', 'CT Chest (High-Res)', 'X-Ray Right Knee', 'Ultrasound Thyroid', 'Mammography'][i],
+        type: 'Radiology',
+        status: 'Pending',
+        doctorName: 'Dr. Ananya Sharma',
+        date: new Date().toISOString().split('T')[0],
+        timestamp: new Date().toISOString()
+      });
+      // 10 Prescriptions
+      seedInvestigations.push({
+        id: `INV-RX-${String(i+1).padStart(3, '0')}`,
+        patientId: `AURA-2026-${String((i % 10) + 1).padStart(4, '0')}`,
+        type: 'Prescription',
+        status: 'Pending',
+        doctorName: 'Dr. Ananya Sharma',
+        medicines: [
+          { name: ['Paracetamol 650mg', 'Metformin 500mg', 'Amlodipine 5mg', 'Omeprazole 20mg'][i % 4], dose: '1 tab', frequency: 'BD', duration: '5 days', dispenseStatus: 'Pending' }
+        ],
+        date: new Date().toISOString().split('T')[0],
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    for (const inv of seedInvestigations) {
+      await setDoc(doc(db, "investigations", inv.id), inv);
     }
 
     // Seed initial audit log
@@ -1401,6 +1444,11 @@ function navigateToPanel(panelId) {
     panel.style.display = 'none';
   });
   
+  // Globally hide all sub-panels first to avoid overlap
+  document.querySelectorAll('.sub-panel').forEach(sub => {
+    sub.style.display = 'none';
+  });
+  
   // Hide settings page
   const settingsPage = document.getElementById('page-system-settings');
   if (settingsPage) settingsPage.style.display = 'none';
@@ -1415,20 +1463,21 @@ function navigateToPanel(panelId) {
   if (outerPanel) {
     outerPanel.style.display = 'block';
     
-    // Hide all sub-panels inside this outer panel
-    outerPanel.querySelectorAll('.sub-panel').forEach(sub => {
-      sub.style.display = 'none';
-    });
-    
     // Show active sub-panel
     const activeSub = document.getElementById(panelId);
     if (activeSub) {
       activeSub.style.display = 'block';
     }
   } else if (panelId === 'admin-settings') {
-    // Edge case for admin settings page
     if (settingsPage) settingsPage.style.display = 'block';
   }
+  
+  // Also handle sub-panels outside of the outer role panel (show them directly if their role is active)
+  const activeSub = document.getElementById(panelId);
+  if (activeSub) {
+    activeSub.style.display = 'block';
+  }
+
   
   // Update sidebar active classes
   document.querySelectorAll('.nav-item').forEach(el => {
@@ -7776,64 +7825,165 @@ window.handleBedClick = function(bedId) {
   const bed = BED_DATA.find(b => b.id === bedId);
   if (!bed) return;
 
-  if (bed.status === 'occupied') {
+  const modal = document.getElementById('modal-bed-management');
+  const title = document.getElementById('bed-mgmt-title');
+  const body = document.getElementById('bed-mgmt-body');
+  if (!modal || !title || !body) return;
+
+  title.textContent = `Bed Management: ${bedId} (${bed.ward})`;
+  
+  if (bed.status === 'available') {
+    // Show patient assignment list
+    const availablePatients = STATE.patients.filter(p => p.status === 'OPD Queue' || p.status === 'Booked');
+    
+    let optionsHtml = availablePatients.length === 0 
+      ? `<p style="font-size:0.75rem; color:var(--text-3); text-align:center; padding:10px;">No patients waiting in queue to assign.</p>`
+      : availablePatients.map(p => `
+          <div class="glass-card" style="padding:10px; margin-bottom:8px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="assignPatientToBedFromModal('${bedId}', '${p.id}')">
+            <div>
+              <strong style="color:var(--primary); font-size:0.8rem;">${p.name}</strong>
+              <div style="font-size:0.7rem; color:var(--text-2);">UHID: ${p.id} | DOB: ${p.dob}</div>
+            </div>
+            <button class="glass-btn glass-btn-primary" style="padding:4px 10px; font-size:0.68rem;">Assign</button>
+          </div>
+        `).join('');
+
+    body.innerHTML = `
+      <div style="font-size:0.8rem; margin-bottom:10px;">Select a patient from the queue to admit/assign to <strong>${bedId}</strong>:</div>
+      <div style="max-height:300px; overflow-y:auto;">
+        ${optionsHtml}
+      </div>
+    `;
+  }
+  
+  else if (bed.status === 'occupied') {
     const patient = STATE.patients.find(p => p.id === bed.patient);
-    if (!patient) return;
-    const targetBedId = prompt(`Transfer patient ${patient.name} (${patient.id}) from ${bedId}. Enter destination bed ID (e.g., WA-01):`);
-    if (targetBedId) {
-      const destBed = BED_DATA.find(b => b.id === targetBedId.toUpperCase());
-      if (!destBed) {
-        showToast(`Invalid bed ID: ${targetBedId}`, 'error');
-        return;
-      }
-      if (destBed.status !== 'available') {
-        showToast(`Destination bed ${targetBedId} is not available (status: ${destBed.status})`, 'error');
-        return;
-      }
-      destBed.status = 'occupied';
-      destBed.patient = bed.patient;
-      bed.status = 'cleaning';
-      delete bed.patient;
-      
-      const pat = STATE.patients.find(p => p.id === destBed.patient);
-      if (pat) {
-        pat.bedAssignment = targetBedId.toUpperCase();
-        mutatePatient(pat);
-      }
-      
-      showToast(`Transferred patient to ${targetBedId.toUpperCase()}`);
-      logAudit('Edit', destBed.patient, `Transferred bed from ${bedId} to ${targetBedId.toUpperCase()}`);
-      renderBedGrid();
+    const availableBeds = BED_DATA.filter(b => b.status === 'available');
+
+    let bedsOptionsHtml = availableBeds.length === 0
+      ? `<p style="font-size:0.75rem; color:var(--text-3);">No other available beds for transfer.</p>`
+      : availableBeds.map(b => `
+          <div class="glass-card" style="padding:8px; margin-bottom:6px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="transferPatientFromModal('${bedId}', '${b.id}')">
+            <span style="font-weight:700; font-size:0.8rem;">${b.id} (${b.ward})</span>
+            <button class="glass-btn glass-btn-secondary" style="padding:2px 8px; font-size:0.65rem;">Transfer Here</button>
+          </div>
+        `).join('');
+
+    body.innerHTML = `
+      <div style="font-size:0.8rem; border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:10px;">
+        <strong>Current Patient:</strong> ${patient ? patient.name : 'Unknown'} (${bed.patient}) <br>
+        <button class="glass-btn glass-btn-secondary" style="color:var(--danger); border-color:var(--danger); font-size:0.7rem; padding:4px 8px; margin-top:8px;" onclick="dischargePatientFromBedModal('${bedId}')">Discharge & Mark Cleaning</button>
+      </div>
+      <div style="font-size:0.8rem; font-weight:700; color:var(--primary); margin-bottom:8px;">Transfer Patient to Available Bed:</div>
+      <div style="max-height:200px; overflow-y:auto;">
+        ${bedsOptionsHtml}
+      </div>
+    `;
+  }
+
+  else if (bed.status === 'cleaning') {
+    body.innerHTML = `
+      <div style="text-align:center; padding:15px;">
+        <p style="font-size:0.8rem; color:var(--text-2); margin-bottom:12px;">This bed is currently undergoing cleaning/disinfection.</p>
+        <button class="glass-btn glass-btn-primary" style="padding:6px 14px; font-size:0.75rem;" onclick="markBedAvailableFromModal('${bedId}')">Mark Clean & Available</button>
+      </div>
+    `;
+  }
+
+  modal.classList.add('open');
+};
+
+window.assignPatientToBedFromModal = async function(bedId, patientId) {
+  const bed = BED_DATA.find(b => b.id === bedId);
+  const pat = STATE.patients.find(p => p.id === patientId);
+  if (!bed || !pat) return;
+
+  bed.status = 'occupied';
+  bed.patient = pat.id;
+  pat.bedAssignment = bedId;
+  pat.status = 'Admitted';
+
+  try {
+    await mutatePatient(pat);
+    showToast(`Successfully assigned ${pat.name} to bed ${bedId}`);
+    logAudit('Edit', pat.id, `Assigned patient to bed ${bedId}`);
+    document.getElementById('modal-bed-management').classList.remove('open');
+    renderBedGrid();
+    if (document.getElementById('nursing-bedmgmt-sub-grid')) {
+      renderNursingBedMgmt();
     }
-  } else if (bed.status === 'available') {
-    const patientId = prompt(`Assign patient to bed ${bedId}. Enter Patient ID (e.g. AURA-2026-0001):`);
-    if (patientId) {
-      const pat = STATE.patients.find(p => p.id === patientId.toUpperCase());
-      if (!pat) {
-        showToast(`Patient ID ${patientId} not found`, 'error');
-        return;
-      }
-      const existingBed = BED_DATA.find(b => b.patient === pat.id);
-      if (existingBed) {
-        showToast(`Patient is already assigned to bed ${existingBed.id}`, 'error');
-        return;
-      }
-      
-      bed.status = 'occupied';
-      bed.patient = pat.id;
-      pat.bedAssignment = bedId;
-      pat.status = 'Admitted';
-      
-      mutatePatient(pat);
-      showToast(`Assigned ${pat.name} to bed ${bedId}`);
-      logAudit('Edit', pat.id, `Assigned patient to bed ${bedId}`);
+  } catch (err) {
+    showToast("Failed to assign patient: " + err.message, "error");
+  }
+};
+
+window.transferPatientFromModal = async function(oldBedId, newBedId) {
+  const oldBed = BED_DATA.find(b => b.id === oldBedId);
+  const newBed = BED_DATA.find(b => b.id === newBedId);
+  if (!oldBed || !newBed) return;
+
+  const patientId = oldBed.patient;
+  const pat = STATE.patients.find(p => p.id === patientId);
+
+  newBed.status = 'occupied';
+  newBed.patient = patientId;
+  oldBed.status = 'cleaning';
+  delete oldBed.patient;
+
+  if (pat) {
+    pat.bedAssignment = newBedId;
+    try {
+      await mutatePatient(pat);
+      showToast(`Transferred patient to ${newBedId}`);
+      logAudit('Edit', patientId, `Transferred patient from bed ${oldBedId} to ${newBedId}`);
+      document.getElementById('modal-bed-management').classList.remove('open');
       renderBedGrid();
+      if (document.getElementById('nursing-bedmgmt-sub-grid')) {
+        renderNursingBedMgmt();
+      }
+    } catch (err) {
+      showToast("Failed to transfer: " + err.message, "error");
     }
-  } else if (bed.status === 'cleaning') {
-    if (confirm(`Mark bed ${bedId} as Available?`)) {
-      bed.status = 'available';
-      showToast(`Bed ${bedId} is now available`);
+  }
+};
+
+window.dischargePatientFromBedModal = async function(bedId) {
+  const bed = BED_DATA.find(b => b.id === bedId);
+  if (!bed) return;
+
+  const patientId = bed.patient;
+  const pat = STATE.patients.find(p => p.id === patientId);
+
+  bed.status = 'cleaning';
+  delete bed.patient;
+
+  if (pat) {
+    pat.bedAssignment = '';
+    pat.status = 'Discharged';
+    try {
+      await mutatePatient(pat);
+      showToast(`Discharged patient from bed ${bedId}`);
+      logAudit('Edit', patientId, `Discharged patient from bed ${bedId} and flagged for cleaning`);
+      document.getElementById('modal-bed-management').classList.remove('open');
       renderBedGrid();
+      if (document.getElementById('nursing-bedmgmt-sub-grid')) {
+        renderNursingBedMgmt();
+      }
+    } catch (err) {
+      showToast("Failed to discharge: " + err.message, "error");
+    }
+  }
+};
+
+window.markBedAvailableFromModal = function(bedId) {
+  const bed = BED_DATA.find(b => b.id === bedId);
+  if (bed) {
+    bed.status = 'available';
+    showToast(`Bed ${bedId} marked as available.`);
+    document.getElementById('modal-bed-management').classList.remove('open');
+    renderBedGrid();
+    if (document.getElementById('nursing-bedmgmt-sub-grid')) {
+      renderNursingBedMgmt();
     }
   }
 };
@@ -8119,6 +8269,721 @@ window.renderLabCompleted = function() {
   });
   html += '</div>';
   container.innerHTML = html;
+};
+
+// ==========================================
+// 24. NURSING INTERFACE REFAC & DOCTOR ROUTING CONTROLLERS
+// ==========================================
+
+window.renderNursingMAR = function() {
+  const container = document.getElementById('nursing-mar');
+  if (!container) return;
+
+  const admittedPatients = STATE.patients.filter(p => p.status === 'Admitted' || p.bedAssignment);
+  if (admittedPatients.length === 0) {
+    container.innerHTML = `
+      <div class="glass-card" style="padding:20px; text-align:center;">
+        <p style="color:var(--text-2);">No admitted patients found. Please admit a patient first via Bed Management.</p>
+      </div>`;
+    return;
+  }
+
+  if (!STATE.nursingActivePatientId && admittedPatients.length > 0) {
+    STATE.nursingActivePatientId = admittedPatients[0].id;
+  }
+
+  const selectedPatient = STATE.patients.find(p => p.id === STATE.nursingActivePatientId);
+  const patientSelectOptions = admittedPatients.map(p => `
+    <option value="${p.id}" ${p.id === STATE.nursingActivePatientId ? 'selected' : ''}>${p.name} (${p.id}) - ${p.bedAssignment || 'No Bed'}</option>
+  `).join('');
+
+  // Pull prescriptions from clinicalRecords
+  const prescriptions = STATE.clinicalRecords.filter(cr => cr.patientId === STATE.nursingActivePatientId && cr.prescription && cr.prescription.length > 0);
+  let medsList = [];
+  prescriptions.forEach(p => {
+    p.prescription.forEach(m => {
+      medsList.push({
+        name: m.name,
+        dose: m.dose,
+        frequency: m.frequency,
+        duration: m.duration,
+        scheduledTime: '08:00 AM',
+        status: m.marStatus || 'Pending'
+      });
+    });
+  });
+
+  if (medsList.length === 0) {
+    medsList = [
+      { name: 'Tab Paracetamol 500mg', dose: '1 tab', frequency: 'TDS', duration: '5 days', scheduledTime: '08:00 AM', status: 'Pending' },
+      { name: 'Tab Pantoprazole 40mg', dose: '1 tab', frequency: 'OD', duration: '10 days', scheduledTime: '07:00 AM', status: 'Pending' },
+      { name: 'Syp Cough Syrup 10ml', dose: '2 tsp', frequency: 'BD', duration: '3 days', scheduledTime: '12:00 PM', status: 'Pending' }
+    ];
+  }
+
+  const medsHtml = medsList.map((m, idx) => {
+    let statusClassStr = 'status-pending';
+    if (m.status === 'Given' || m.status === 'Administered') statusClassStr = 'status-done';
+    else if (m.status === 'Refused') statusClassStr = 'status-canceled';
+    else if (m.status === 'Delayed') statusClassStr = 'status-active';
+
+    return `
+      <div class="glass-card" style="padding:12px; margin-bottom:8px; border-left: 4px solid var(${m.status === 'Given' ? '--success' : m.status === 'Refused' ? '--danger' : '--primary'});">
+        <div class="flex-between">
+          <strong style="color:var(--primary); font-size:0.85rem">${m.name}</strong>
+          <span class="status-indicator ${statusClassStr}">${m.status}</span>
+        </div>
+        <div style="font-size:0.75rem; color:var(--text-2); margin-top:4px;">
+          Dose: ${m.dose} | Frequency: ${m.frequency} | Duration: ${m.duration} <br>
+          Scheduled Time: <strong>${m.scheduledTime}</strong>
+        </div>
+        <div style="display:flex; gap:6px; margin-top:8px;">
+          <button class="glass-btn glass-btn-primary" style="padding:3px 8px; font-size:0.65rem; background:var(--success); border:none;" onclick="updateMARStatus(${idx}, 'Given')">Give</button>
+          <button class="glass-btn glass-btn-secondary" style="padding:3px 8px; font-size:0.65rem;" onclick="updateMARStatus(${idx}, 'Delayed')">Delay</button>
+          <button class="glass-btn glass-btn-secondary" style="padding:3px 8px; font-size:0.65rem; color:var(--danger); border-color:var(--danger);" onclick="updateMARStatus(${idx}, 'Refused')">Refuse</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const marLogs = STATE.icuCharting?.filter(c => c.patientId === STATE.nursingActivePatientId && c.type === 'MAR') || [];
+  const logsHtml = marLogs.length === 0 
+    ? `<p style="font-size:0.75rem; color:var(--text-3); text-align:center; padding:15px;">No medication administrations logged today.</p>`
+    : marLogs.map(l => `
+        <div style="font-size:0.72rem; padding:6px; border-bottom:1px solid var(--border)">
+          <span>🕒 ${new Date(l.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span> - 
+          <strong>${l.medName}</strong> was marked as <strong>${l.status}</strong> by Nurse
+        </div>
+      `).join('');
+
+  container.innerHTML = `
+    <div class="nursing-workspace-grid">
+      <!-- Left Panel: Selector -->
+      <div class="glass-card" style="display:flex; flex-direction:column; gap:10px;">
+        <h4 class="form-title" style="margin-bottom:4px">Patient Roster</h4>
+        <div class="form-group">
+          <label>Select Active Patient</label>
+          <select style="width:100%; margin-top:4px" onchange="window.selectNursingActivePatient(this.value)">
+            ${patientSelectOptions}
+          </select>
+        </div>
+        ${selectedPatient ? `
+          <div style="margin-top:10px; font-size:0.78rem; line-height:1.4">
+            <div style="font-weight:700; color:var(--primary); font-size:0.85rem">${selectedPatient.name}</div>
+            <div style="color:var(--text-2);">UHID: ${selectedPatient.id}</div>
+            <div style="color:var(--text-2);">Bed: ${selectedPatient.bedAssignment || 'No Bed Assigned'}</div>
+            <div style="color:var(--text-2); margin-top:6px;"><strong>Allergies:</strong> ${selectedPatient.allergies || 'None Reported'}</div>
+          </div>
+        ` : ''}
+      </div>
+
+      <!-- Center Panel: MAR cards -->
+      <div class="glass-card" style="display:flex; flex-direction:column;">
+        <h4 class="form-title" style="margin-bottom:8px">Medication Schedule</h4>
+        <div style="flex:1; overflow-y:auto; max-height:450px;">
+          ${medsHtml}
+        </div>
+      </div>
+
+      <!-- Right Panel: Log history -->
+      <div class="glass-card" style="display:flex; flex-direction:column;">
+        <h4 class="form-title" style="margin-bottom:8px">Medication Log</h4>
+        <div style="flex:1; overflow-y:auto; max-height:450px;">
+          ${logsHtml}
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+window.selectNursingActivePatient = function(val) {
+  STATE.nursingActivePatientId = val;
+  loadDashboardData();
+};
+
+window.updateMARStatus = async function(idx, status) {
+  const patientId = STATE.nursingActivePatientId;
+  const medsList = [
+    { name: 'Tab Paracetamol 500mg' },
+    { name: 'Tab Pantoprazole 40mg' },
+    { name: 'Syp Cough Syrup 10ml' }
+  ];
+  const med = medsList[idx] || { name: 'Prescribed Medication' };
+
+  const logId = `MAR-${Date.now().toString().slice(-4)}`;
+  const log = {
+    id: logId,
+    patientId: patientId,
+    type: 'MAR',
+    medName: med.name,
+    status: status,
+    timestamp: new Date().toISOString()
+  };
+
+  try {
+    await convex.mutation(api.db.upsertIcuCharting, log);
+    showToast(`Logged medication: ${med.name} - ${status}`);
+    logAudit('Edit', patientId, `Administered medication: ${med.name} (${status})`);
+    loadDashboardData();
+  } catch (err) {
+    showToast("Failed to log medication: " + err.message, "error");
+  }
+};
+
+window.renderNursingIO = function() {
+  const container = document.getElementById('nursing-io');
+  if (!container) return;
+
+  const admittedPatients = STATE.patients.filter(p => p.status === 'Admitted' || p.bedAssignment);
+  if (admittedPatients.length === 0) {
+    container.innerHTML = `<div class="glass-card" style="padding:20px; text-align:center;"><p style="color:var(--text-2);">No admitted patients found. Please admit a patient first.</p></div>`;
+    return;
+  }
+
+  if (!STATE.nursingActivePatientId && admittedPatients.length > 0) {
+    STATE.nursingActivePatientId = admittedPatients[0].id;
+  }
+
+  const patientSelectOptions = admittedPatients.map(p => `
+    <option value="${p.id}" ${p.id === STATE.nursingActivePatientId ? 'selected' : ''}>${p.name} (${p.id}) - ${p.bedAssignment || 'No Bed'}</option>
+  `).join('');
+
+  const ioLogs = STATE.icuCharting?.filter(c => c.patientId === STATE.nursingActivePatientId && (c.type === 'Intake' || c.type === 'Output')) || [];
+  
+  let totalIntake = 0;
+  let totalOutput = 0;
+  ioLogs.forEach(l => {
+    if (l.type === 'Intake') totalIntake += l.amount || 0;
+    else if (l.type === 'Output') totalOutput += l.amount || 0;
+  });
+  const balance = totalIntake - totalOutput;
+
+  const logsHtml = ioLogs.length === 0 
+    ? `<p style="font-size:0.75rem; color:var(--text-3); text-align:center; padding:20px;">No fluid balance records logged today.</p>`
+    : ioLogs.map(l => `
+        <div style="font-size:0.72rem; padding:6px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;">
+          <span>🕒 ${new Date(l.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - <strong>${l.label}</strong></span>
+          <span style="font-weight:700; color:var(${l.type === 'Intake' ? '--success' : '--danger'})">${l.type === 'Intake' ? '+' : '-'}${l.amount} mL</span>
+        </div>
+      `).join('');
+
+  container.innerHTML = `
+    <div class="nursing-workspace-grid">
+      <!-- Left Panel: Selector -->
+      <div class="glass-card" style="display:flex; flex-direction:column; gap:10px;">
+        <h4 class="form-title" style="margin-bottom:4px">Patient Roster</h4>
+        <div class="form-group">
+          <label>Select Active Patient</label>
+          <select style="width:100%; margin-top:4px" onchange="window.selectNursingActivePatient(this.value)">
+            ${patientSelectOptions}
+          </select>
+        </div>
+        <div style="margin-top:15px; padding:10px; border-radius:6px; background:rgba(70,15,117,0.05); text-align:center;">
+          <div style="font-size:0.7rem; color:var(--text-2); text-transform:uppercase;">Fluid Balance</div>
+          <div style="font-size:1.4rem; font-weight:700; color:var(--primary); margin:4px 0;">${balance >= 0 ? '+' : ''}${balance} mL</div>
+          <div style="font-size:0.65rem; color:var(--text-3);">Intake: ${totalIntake}mL | Output: ${totalOutput}mL</div>
+        </div>
+      </div>
+
+      <!-- Center Panel: Presets Grid -->
+      <div class="glass-card" style="display:flex; flex-direction:column;">
+        <h4 class="form-title" style="margin-bottom:12px">Record Intake / Output (Presets)</h4>
+        
+        <div style="font-size:0.78rem; font-weight:700; color:var(--success); margin-bottom:8px;">➕ Fluid Intake Presets</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:15px;">
+          <button class="glass-btn glass-btn-secondary" style="font-size:0.7rem; padding:8px;" onclick="logFluid('Intake', 200, 'Water Glass')">🥤 Glass of Water (200 mL)</button>
+          <button class="glass-btn glass-btn-secondary" style="font-size:0.7rem; padding:8px;" onclick="logFluid('Intake', 500, 'IV Normal Saline')">💧 IV Normal Saline (500 mL)</button>
+          <button class="glass-btn glass-btn-secondary" style="font-size:0.7rem; padding:8px;" onclick="logFluid('Intake', 150, 'Apple Juice')">🧃 Apple Juice (150 mL)</button>
+          <button class="glass-btn glass-btn-secondary" style="font-size:0.7rem; padding:8px;" onclick="logFluid('Intake', 250, 'Blood Transfusion')">🩸 Packed Red Cells (250 mL)</button>
+        </div>
+
+        <div style="font-size:0.78rem; font-weight:700; color:var(--danger); margin-bottom:8px;">➖ Fluid Output Presets</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <button class="glass-btn glass-btn-secondary" style="font-size:0.7rem; padding:8px;" onclick="logFluid('Output', 300, 'Urine Voided')">🚽 Urine Voided (300 mL)</button>
+          <button class="glass-btn glass-btn-secondary" style="font-size:0.7rem; padding:8px;" onclick="logFluid('Output', 100, 'Vomitus')">🤮 Vomitus (100 mL)</button>
+          <button class="glass-btn glass-btn-secondary" style="font-size:0.7rem; padding:8px;" onclick="logFluid('Output', 150, 'Drainage Bag')">👜 Surgical Drain (150 mL)</button>
+          <button class="glass-btn glass-btn-secondary" style="font-size:0.7rem; padding:8px;" onclick="logFluid('Output', 200, 'Loose Stool')">💩 Diarrhea / Stool (200 mL)</button>
+        </div>
+      </div>
+
+      <!-- Right Panel: Balance history -->
+      <div class="glass-card" style="display:flex; flex-direction:column;">
+        <h4 class="form-title" style="margin-bottom:8px">Fluid Log History</h4>
+        <div style="flex:1; overflow-y:auto; max-height:450px;">
+          ${logsHtml}
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+window.logFluid = async function(type, amount, label) {
+  const patientId = STATE.nursingActivePatientId;
+  const logId = `FL-${Date.now().toString().slice(-4)}`;
+  const log = {
+    id: logId,
+    patientId: patientId,
+    type: type,
+    amount: amount,
+    label: label,
+    timestamp: new Date().toISOString()
+  };
+
+  try {
+    await convex.mutation(api.db.upsertIcuCharting, log);
+    showToast(`Logged fluid ${type.toLowerCase()}: +${amount}mL (${label})`);
+    logAudit('Edit', patientId, `Logged fluid ${type.toLowerCase()} of ${amount}mL`);
+    loadDashboardData();
+  } catch (err) {
+    showToast("Failed to log fluid: " + err.message, "error");
+  }
+};
+
+window.renderNursingCarePlans = function() {
+  const container = document.getElementById('nursing-careplans');
+  if (!container) return;
+
+  const admittedPatients = STATE.patients.filter(p => p.status === 'Admitted' || p.bedAssignment);
+  if (admittedPatients.length === 0) {
+    container.innerHTML = `<div class="glass-card" style="padding:20px; text-align:center;"><p style="color:var(--text-2);">No admitted patients found. Please admit a patient first.</p></div>`;
+    return;
+  }
+
+  if (!STATE.nursingActivePatientId && admittedPatients.length > 0) {
+    STATE.nursingActivePatientId = admittedPatients[0].id;
+  }
+
+  const patientSelectOptions = admittedPatients.map(p => `
+    <option value="${p.id}" ${p.id === STATE.nursingActivePatientId ? 'selected' : ''}>${p.name} (${p.id}) - ${p.bedAssignment || 'No Bed'}</option>
+  `).join('');
+
+  const plans = STATE.icuCharting?.filter(c => c.patientId === STATE.nursingActivePatientId && c.type === 'CarePlan') || [];
+  
+  let carePlansList = plans;
+  if (carePlansList.length === 0) {
+    carePlansList = [
+      { id: 'CP-1', label: 'Impaired Gas Exchange', goal: 'Maintain SpO2 > 95%', interventions: ['Monitor respiration rate every 2 hrs', 'Provide oxygen via nasal cannula 2L', 'Reposition to semi-Fowler position'], checked: [false, false, false] },
+      { id: 'CP-2', label: 'Risk for Infection', goal: 'Keep temp < 99.1°F, surgical site clean', interventions: ['Inspect surgical dressings daily', 'Perform hand hygiene before patient contact', 'Administer antibiotic IV as scheduled'], checked: [false, false, false] }
+    ];
+  }
+
+  const plansHtml = carePlansList.map((cp, cpIdx) => {
+    const interHtml = cp.interventions.map((int, intIdx) => {
+      const isChecked = cp.checked && cp.checked[intIdx];
+      return `
+        <label style="display:flex; align-items:center; gap:8px; font-size:0.75rem; margin-bottom:6px; cursor:pointer;">
+          <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCarePlanIntervention(${cpIdx}, ${intIdx}, this.checked)">
+          <span style="${isChecked ? 'text-decoration: line-through; color:var(--text-3);' : ''}">${int}</span>
+        </label>
+      `;
+    }).join('');
+
+    return `
+      <div class="glass-card" style="padding:12px; margin-bottom:10px; border-left:4px solid var(--primary)">
+        <div style="font-weight:700; color:var(--primary); font-size:0.85rem;">Diagnosis: ${cp.label}</div>
+        <div style="font-size:0.72rem; color:var(--text-2); margin-top:2px;">Goal: <strong>${cp.goal}</strong></div>
+        <div style="margin-top:10px; padding-top:8px; border-top:1px solid var(--border);">
+          ${interHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="nursing-workspace-grid">
+      <!-- Left Panel: Selector -->
+      <div class="glass-card" style="display:flex; flex-direction:column; gap:10px;">
+        <h4 class="form-title" style="margin-bottom:4px">Patient Roster</h4>
+        <div class="form-group">
+          <label>Select Active Patient</label>
+          <select style="width:100%; margin-top:4px" onchange="window.selectNursingActivePatient(this.value)">
+            ${patientSelectOptions}
+          </select>
+        </div>
+      </div>
+
+      <!-- Center Panel: Plans & Checklists -->
+      <div class="glass-card" style="display:flex; flex-direction:column;">
+        <h4 class="form-title" style="margin-bottom:10px">Nursing Interventions Checklist</h4>
+        <div style="flex:1; overflow-y:auto; max-height:450px;">
+          ${plansHtml}
+        </div>
+      </div>
+
+      <!-- Right Panel: Templates -->
+      <div class="glass-card" style="display:flex; flex-direction:column; gap:10px;">
+        <h4 class="form-title" style="margin-bottom:8px">Templates</h4>
+        <div style="font-size:0.72rem; color:var(--text-2); margin-bottom:4px;">Add Care Plan from templates:</div>
+        
+        <button class="glass-btn glass-btn-secondary" style="font-size:0.7rem; text-align:left; padding:8px; display:block; width:100%; margin-bottom:6px;" onclick="addCarePlanTemplate('Acute Pain', 'Pain Score < 3 within 24h', 'Administer analgesics, Assess pain scale hourly, Apply heat compress')">📋 Acute Pain Care Plan</button>
+        <button class="glass-btn glass-btn-secondary" style="font-size:0.7rem; text-align:left; padding:8px; display:block; width:100%; margin-bottom:6px;" onclick="addCarePlanTemplate('Risk for Falls', 'Zero fall incidents', 'Implement fall risk bed rail locks, Keep call bell in reach, Assist during ambulation')">📋 Risk for Falls Care Plan</button>
+        <button class="glass-btn glass-btn-secondary" style="font-size:0.7rem; text-align:left; padding:8px; display:block; width:100%; margin-bottom:6px;" onclick="addCarePlanTemplate('Deficient Fluid Volume', 'Balanced I/O and normal skin turgor', 'Monitor vitals hourly, Encourage oral fluids, Chart IV Infusions')">📋 Deficient Fluid Care Plan</button>
+      </div>
+    </div>
+  `;
+};
+
+window.toggleCarePlanIntervention = function(cpIdx, intIdx, checked) {
+  showToast(`Intervention ${checked ? 'completed' : 'reactivated'} successfully!`);
+};
+
+window.addCarePlanTemplate = async function(label, goal, interventionsStr) {
+  const patientId = STATE.nursingActivePatientId;
+  const logId = `CP-${Date.now().toString().slice(-4)}`;
+  const interventions = interventionsStr.split(', ');
+  
+  const plan = {
+    id: logId,
+    patientId: patientId,
+    type: 'CarePlan',
+    label: label,
+    goal: goal,
+    interventions: interventions,
+    checked: interventions.map(() => false),
+    timestamp: new Date().toISOString()
+  };
+
+  try {
+    await convex.mutation(api.db.upsertIcuCharting, plan);
+    showToast(`Care Plan Added: ${label}`);
+    logAudit('Create', patientId, `Added nursing care plan template: ${label}`);
+    loadDashboardData();
+  } catch (err) {
+    showToast("Failed to add care plan: " + err.message, "error");
+  }
+};
+
+window.renderNursingHandover = function() {
+  const container = document.getElementById('nursing-handover');
+  if (!container) return;
+
+  const admittedPatients = STATE.patients.filter(p => p.status === 'Admitted' || p.bedAssignment);
+  if (admittedPatients.length === 0) {
+    container.innerHTML = `<div class="glass-card" style="padding:20px; text-align:center;"><p style="color:var(--text-2);">No admitted patients found. Please admit a patient first.</p></div>`;
+    return;
+  }
+
+  if (!STATE.nursingActivePatientId && admittedPatients.length > 0) {
+    STATE.nursingActivePatientId = admittedPatients[0].id;
+  }
+
+  const patientSelectOptions = admittedPatients.map(p => `
+    <option value="${p.id}" ${p.id === STATE.nursingActivePatientId ? 'selected' : ''}>${p.name} (${p.id}) - ${p.bedAssignment || 'No Bed'}</option>
+  `).join('');
+
+  const activePat = STATE.patients.find(p => p.id === STATE.nursingActivePatientId);
+  const vit = STATE.vitals.find(v => v.patientId === STATE.nursingActivePatientId) || { bp: '120/80', temp: 98.6, spo2: 98, pulse: 72 };
+
+  container.innerHTML = `
+    <div class="nursing-workspace-grid">
+      <!-- Left Panel: Selector -->
+      <div class="glass-card" style="display:flex; flex-direction:column; gap:10px;">
+        <h4 class="form-title" style="margin-bottom:4px">Patient Roster</h4>
+        <div class="form-group">
+          <label>Select Active Patient</label>
+          <select style="width:100%; margin-top:4px" onchange="window.selectNursingActivePatient(this.value)">
+            ${patientSelectOptions}
+          </select>
+        </div>
+      </div>
+
+      <!-- Center Panel: ISBAR template -->
+      <div class="glass-card" style="display:flex; flex-direction:column; gap:10px;">
+        <h4 class="form-title">ISBAR Shift Handover Summary</h4>
+        
+        <div style="font-size:0.75rem; border:1px solid var(--border); border-radius:6px; padding:10px; background:rgba(70,15,117,0.02)">
+          <div style="margin-bottom:8px"><strong>I (Introduction):</strong> Patient ${activePat?.name || 'Name'} (${activePat?.id || 'ID'}), Bed: ${activePat?.bedAssignment || 'N/A'}.</div>
+          <div style="margin-bottom:8px"><strong>S (Situation):</strong> Admitted with diagnosis: <em>${activePat?.chronicConditions || 'General observation'}</em>. Currently stable.</div>
+          <div style="margin-bottom:8px"><strong>B (Background):</strong> Reg Date: ${activePat?.regDate ? new Date(activePat.regDate).toLocaleDateString() : 'N/A'}. Allergies: ${activePat?.allergies || 'None'}.</div>
+          <div style="margin-bottom:8px"><strong>A (Assessment):</strong> Latest Vitals - BP: ${vit.bp} | Temp: ${vit.temp}°F | SpO2: ${vit.spo2}% | Pulse: ${vit.pulse} bpm.</div>
+          <div><strong>R (Recommendation):</strong> Continue scheduled medications, monitor fluid balance, and check vitals every 4 hours.</div>
+        </div>
+
+        <div class="form-group">
+          <label>Handover & Roster Notes</label>
+          <textarea id="handover-notes-textarea" placeholder="Add shift logs, nurse warnings..." style="margin-top:4px; height:80px;"></textarea>
+        </div>
+
+        <div style="display:flex; gap:8px;">
+          <button class="glass-btn glass-btn-secondary" style="font-size:0.7rem; padding:6px 12px;" onclick="loadHandoverNoteTemplate('Post-operative recovery in progress. Patient resting comfortably with stable vital parameters.')">Load Post-Op Template</button>
+          <button class="glass-btn glass-btn-secondary" style="font-size:0.7rem; padding:6px 12px;" onclick="loadHandoverNoteTemplate('Vital signs stable. All medications administered as scheduled. No active clinical complaints.')">Load Stable Template</button>
+        </div>
+
+        <button class="glass-btn glass-btn-primary" style="width:100%; margin-top:8px" onclick="saveShiftHandoverLog()">Confirm Handover Sign-Off</button>
+      </div>
+
+      <!-- Right Panel: Logs -->
+      <div class="glass-card" style="display:flex; flex-direction:column;">
+        <h4 class="form-title" style="margin-bottom:8px">Recent Handovers</h4>
+        <div id="handover-recent-logs" style="font-size:0.72rem; line-height:1.4">
+          <div style="padding:6px; border-bottom:1px solid var(--border)">
+            🕒 Today, 08:00 AM - Shift Handover completed by Morning Nurse. Notes: <em>Post-op stable.</em>
+          </div>
+          <div style="padding:6px; border-bottom:1px solid var(--border)">
+            🕒 Yesterday, 08:00 PM - Shift Handover signed by Night Nurse. Notes: <em>Patient slept well, vitals monitored.</em>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+window.loadHandoverNoteTemplate = function(text) {
+  const area = document.getElementById('handover-notes-textarea');
+  if (area) area.value = text;
+};
+
+window.saveShiftHandoverLog = function() {
+  const text = document.getElementById('handover-notes-textarea')?.value || '';
+  if (!text) {
+    showToast("Please fill or select a template note before handover.", "error");
+    return;
+  }
+  showToast("Shift Handover signed off and locked successfully!");
+  logAudit('Edit', STATE.nursingActivePatientId, `Signed off shift handover with note: ${text}`);
+  const area = document.getElementById('handover-notes-textarea');
+  if (area) area.value = '';
+};
+
+window.renderNursingBedMgmt = function() {
+  const container = document.getElementById('nursing-bedmgmt');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="workspace-grid" style="grid-template-columns: 1fr; gap:14px;">
+      <div class="glass-card">
+        <h4 class="form-title" style="margin-bottom:8px">Ward Bed Management Grid</h4>
+        <div style="font-size:0.75rem; color:var(--text-2); margin-bottom:12px;">Click any bed card below to assign patients, schedule transfers, or mark beds available.</div>
+        <div class="bed-grid" id="nursing-bedmgmt-sub-grid" style="display:grid; grid-template-columns: repeat(6, 1fr); gap:12px;"><!-- JS loaded --></div>
+        
+        <div style="display:flex; gap:14px; margin-top:15px; font-size:0.7rem">
+          <span><span style="display:inline-block; width:12px; height:12px; border-radius:3px; background:var(--success-bg); border:1px solid var(--success); vertical-align:middle; margin-right:4px;"></span> Available</span>
+          <span><span style="display:inline-block; width:12px; height:12px; border-radius:3px; background:rgba(37,99,235,.08); border:1px solid var(--info); vertical-align:middle; margin-right:4px;"></span> Occupied</span>
+          <span><span style="display:inline-block; width:12px; height:12px; border-radius:3px; background:var(--warning-bg); border:1px solid var(--warning); vertical-align:middle; margin-right:4px;"></span> Cleaning</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  setTimeout(() => {
+    const grid = document.getElementById('nursing-bedmgmt-sub-grid');
+    if (!grid) return;
+
+    grid.innerHTML = BED_DATA.map(bed => {
+      const colorMap = { available: 'var(--success-bg)', occupied: 'rgba(37,99,235,.08)', cleaning: 'var(--warning-bg)' };
+      const borderMap = { available: 'var(--success)', occupied: 'var(--info)', cleaning: 'var(--warning)' };
+      const patient = bed.patient ? STATE.patients.find(p => p.id === bed.patient) : null;
+      return `
+        <div class="bed-cell" style="background:${colorMap[bed.status]}; border:1px solid ${borderMap[bed.status]}; border-radius:8px; padding:12px 10px; text-align:center; cursor:pointer;" onclick="handleBedClick('${bed.id}')">
+          <div style="font-size:0.85rem; font-weight:700; color:var(--text-1)">${bed.id}</div>
+          <div style="font-size:0.65rem; color:var(--text-2); text-transform:capitalize; margin-top:2px;">${bed.status}</div>
+          ${patient ? `<div style="font-size:0.65rem; font-weight:600; color:var(--primary); margin-top:4px;">${patient.name}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }, 100);
+};
+
+// --- DOCTOR BOOKING OPTIONS CONTROLLERS ---
+
+window.openDoctorWardAdmission = function() {
+  const patientId = STATE.selectedPatientId;
+  if (!patientId) {
+    showToast("Please select a patient from the consultation queue first.", "error");
+    return;
+  }
+  const patient = STATE.patients.find(p => p.id === patientId);
+  const modal = document.getElementById('modal-doctor-ward');
+  const body = document.getElementById('doctor-ward-body');
+  if (!modal || !body) return;
+
+  const availableBeds = BED_DATA.filter(b => b.status === 'available');
+  let bedsHtml = availableBeds.length === 0
+    ? `<p style="font-size:0.75rem; color:var(--text-3); text-align:center;">No available ward beds at this moment.</p>`
+    : availableBeds.map(b => `
+        <div class="glass-card" style="padding:10px; margin-bottom:8px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="doctorAssignPatientToBed('${b.id}', '${patientId}', 'Ward')">
+          <strong>Bed ${b.id} (${b.ward})</strong>
+          <button class="glass-btn glass-btn-primary" style="padding:4px 8px; font-size:0.68rem;">Admit</button>
+        </div>
+      `).join('');
+
+  body.innerHTML = `
+    <div style="font-size:0.8rem; margin-bottom:10px;">Select a Ward Bed to admit <strong>${patient?.name}</strong>:</div>
+    <div style="max-height:250px; overflow-y:auto;">
+      ${bedsHtml}
+    </div>
+  `;
+  modal.classList.add('open');
+};
+
+window.openDoctorIcuAdmission = function() {
+  const patientId = STATE.selectedPatientId;
+  if (!patientId) {
+    showToast("Please select a patient first.", "error");
+    return;
+  }
+  const patient = STATE.patients.find(p => p.id === patientId);
+  const modal = document.getElementById('modal-doctor-icu');
+  const body = document.getElementById('doctor-icu-body');
+  if (!modal || !body) return;
+
+  const icuBeds = [
+    { id: 'ICU-Bed 1', status: 'available' },
+    { id: 'ICU-Bed 2', status: 'available' },
+    { id: 'ICU-Bed 3', status: 'occupied' },
+    { id: 'ICU-Bed 4', status: 'available' },
+    { id: 'ICU-Bed 5', status: 'cleaning' },
+    { id: 'ICU-Bed 6', status: 'available' },
+    { id: 'ICU-Bed 7', status: 'available' },
+    { id: 'ICU-Bed 8', status: 'occupied' },
+    { id: 'ICU-Bed 9', status: 'available' },
+    { id: 'ICU-Bed 10', status: 'available' }
+  ];
+
+  let bedsHtml = icuBeds.map(b => {
+    const isAvail = b.status === 'available';
+    return `
+      <div class="glass-card" style="padding:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; opacity:${isAvail ? '1' : '0.6'}">
+        <div>
+          <strong>${b.id}</strong>
+          <span style="font-size:0.65rem; margin-left:8px; text-transform:uppercase; color:var(${isAvail ? '--success' : '--danger'})">${b.status}</span>
+        </div>
+        ${isAvail ? `<button class="glass-btn glass-btn-primary" style="padding:4px 8px; font-size:0.68rem;" onclick="doctorAssignPatientToBed('${b.id}', '${patientId}', 'ICU')">Book ICU</button>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  body.innerHTML = `
+    <div style="font-size:0.8rem; margin-bottom:10px;">Select an ICU Bed to admit <strong>${patient?.name}</strong>:</div>
+    <div style="max-height:250px; overflow-y:auto;">
+      ${bedsHtml}
+    </div>
+  `;
+  modal.classList.add('open');
+};
+
+window.doctorAssignPatientToBed = async function(bedId, patientId, type) {
+  const pat = STATE.patients.find(p => p.id === patientId);
+  if (!pat) return;
+
+  if (type === 'Ward') {
+    const bed = BED_DATA.find(b => b.id === bedId);
+    if (bed) {
+      bed.status = 'occupied';
+      bed.patient = patientId;
+    }
+    pat.bedAssignment = bedId;
+    pat.status = 'Admitted';
+  } else {
+    pat.bedAssignment = bedId;
+    pat.status = 'ICU Admitted';
+    
+    const icuAdm = {
+      id: `ICU-${Date.now().toString().slice(-4)}`,
+      patientId: patientId,
+      bedNumber: bedId,
+      diagnosis: 'Acute admission from Doctor consult',
+      ventilatorStatus: false,
+      isolationFlag: false,
+      acuityLevel: 'Critical',
+      nurseId: 'STF003',
+      apacheScore: 18,
+      sofaScore: 5,
+      ewsScore: 3,
+      timestamp: new Date().toISOString()
+    };
+    await setDoc(doc(db, "icuAdmissions", icuAdm.id), icuAdm);
+  }
+
+  try {
+    await mutatePatient(pat);
+    showToast(`Successfully booked ${type} bed ${bedId} for ${pat.name}!`);
+    logAudit('Edit', patientId, `Doctor assigned patient to ${type} bed ${bedId}`);
+    
+    document.getElementById('modal-doctor-ward').classList.remove('open');
+    document.getElementById('modal-doctor-icu').classList.remove('open');
+    
+    renderBedGrid();
+  } catch (err) {
+    showToast("Failed to book bed: " + err.message, "error");
+  }
+};
+
+window.openDoctorOtSchedule = function() {
+  const patientId = STATE.selectedPatientId;
+  if (!patientId) {
+    showToast("Please select a patient first.", "error");
+    return;
+  }
+  const patient = STATE.patients.find(p => p.id === patientId);
+  const modal = document.getElementById('modal-doctor-ot');
+  const body = document.getElementById('doctor-ot-body');
+  if (!modal || !body) return;
+
+  const docOptions = DOCTORS.map(d => `<option value="${d.id}">${d.name} (${d.dept})</option>`).join('');
+
+  body.innerHTML = `
+    <div style="font-size:0.8rem; margin-bottom:12px;">Schedule surgery/procedure for <strong>${patient?.name}</strong>:</div>
+    <form id="doc-ot-schedule-form" onsubmit="event.preventDefault()">
+      <div class="form-group" style="margin-bottom:8px">
+        <label>Procedure Name *</label>
+        <input type="text" id="doc-ot-procedure" required placeholder="e.g. Appendectomy, Coronary Bypass">
+      </div>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px">
+        <div class="form-group"><label>OT Room</label><select id="doc-ot-room"><option>OT-1</option><option>OT-2</option><option>OT-3</option></select></div>
+        <div class="form-group"><label>Surgeon</label><select id="doc-ot-surgeon">${docOptions}</select></div>
+      </div>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px">
+        <div class="form-group"><label>Date</label><input type="date" id="doc-ot-date" required></div>
+        <div class="form-group"><label>Time</label><input type="time" id="doc-ot-time" required></div>
+      </div>
+      <button class="glass-btn glass-btn-primary" style="width:100%" onclick="submitDoctorOtBooking('${patientId}')">Confirm OT Booking</button>
+    </form>
+  `;
+  
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dateStr = tomorrow.toISOString().split('T')[0];
+  document.getElementById('doc-ot-date').value = dateStr;
+  document.getElementById('doc-ot-time').value = "09:00";
+
+  modal.classList.add('open');
+};
+
+window.submitDoctorOtBooking = async function(patientId) {
+  const proc = document.getElementById('doc-ot-procedure')?.value || '';
+  const room = document.getElementById('doc-ot-room')?.value || 'OT-1';
+  const surgeonId = document.getElementById('doc-ot-surgeon')?.value || 'doc001';
+  const dateStr = document.getElementById('doc-ot-date')?.value || '';
+  const timeStr = document.getElementById('doc-ot-time')?.value || '';
+
+  if (!proc || !dateStr || !timeStr) {
+    showToast("Please fill out all fields.", "error");
+    return;
+  }
+
+  const surgeryId = `SURG-${Date.now().toString().slice(-4)}`;
+  const surgRecord = {
+    id: surgeryId,
+    patientId: patientId,
+    procedureName: proc,
+    roomNumber: room,
+    surgeonId: surgeonId,
+    anesthetistId: 'STF005',
+    date: dateStr,
+    time: timeStr,
+    status: 'Scheduled',
+    timestamp: new Date().toISOString()
+  };
+
+  try {
+    await setDoc(doc(db, "surgeries", surgeryId), surgRecord);
+    showToast(`Surgery scheduled successfully in ${room}!`);
+    logAudit('Create', patientId, `Doctor booked surgery procedure: ${proc} in ${room}`);
+    document.getElementById('modal-doctor-ot').classList.remove('open');
+  } catch (err) {
+    showToast("Failed to book OT: " + err.message, "error");
+  }
 };
 
 window.viewAttachedDocument = function(id) {
